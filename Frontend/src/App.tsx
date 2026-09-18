@@ -9,7 +9,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Sidebar, NavTab } from './components/Sidebar';
-import { KPICards } from './components/KPICards';
 import { FilterToolbar } from './components/FilterToolbar';
 import { TicketQueue } from './components/TicketQueue';
 import { TicketDetail } from './components/TicketDetail';
@@ -274,15 +273,7 @@ export default function App() {
 
       {/* Top Header */}
       <Header
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
         operatorProfile={operatorProfile}
-        notifications={notifications}
-        pendingCount={metrics.pendingReview}
-        onQuickFilterPending={() => {
-          setCurrentStatusTab('da_nop_cho_duyet');
-          showToast('Đang lọc các hồ sơ tài xế đã nộp biên bản giải trình');
-        }}
         onUpdateOperatorStatus={(status) => {
           setOperatorProfile((prev) => ({ ...prev, status }));
           showToast(`Đã cập nhật trạng thái: ${status === 'online' ? 'Sẵn sàng thẩm định' : status === 'break' ? 'Nghỉ giải lao' : 'Hội ý phán quyết'}`);
@@ -305,15 +296,6 @@ export default function App() {
         <main className="flex-1 flex flex-col overflow-hidden p-3.5 bg-[#f8f9ff]">
           {currentTab === 'cases' && (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* 4 Compliance Metrics Cards */}
-              <KPICards
-                metrics={metrics}
-                onFilterPending={() => {
-                  setCurrentStatusTab('da_nop_cho_duyet');
-                  showToast('Đã lọc danh sách hồ sơ có biên bản giải trình chờ duyệt');
-                }}
-              />
-
               {/* Filter Toolbar for Fraud Type, Severity, Status */}
               <FilterToolbar
                 searchQuery={searchQuery}
@@ -364,7 +346,7 @@ export default function App() {
                     {cases.length === 0 && !isDemoMode && (
                       <button
                         onClick={handleLoadDemoData}
-                        className="mt-4 px-3.5 py-1.5 bg-[#008284] hover:bg-[#006f71] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                        className="mt-4 px-3.5 py-1.5 btn-gsm-primary rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         Nạp hồ sơ mẫu thẩm định

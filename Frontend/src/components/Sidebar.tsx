@@ -78,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#008284] text-white shadow-xs'
+                    ? 'btn-gsm-primary'
                     : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
@@ -124,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Progress Bar */}
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-2.5">
             <div 
-              className="bg-[#20B9BE] h-full rounded-full transition-all duration-500" 
+              className="bg-gradient-to-r from-[#28BDBF] to-[#209799] h-full rounded-full transition-all duration-500 shadow-2xs" 
               style={{ width: `${Math.min(100, Math.max(0, metrics?.slaCompliancePercent ?? 100))}%` }}
             ></div>
           </div>

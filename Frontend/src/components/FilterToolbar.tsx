@@ -5,14 +5,14 @@
  * Fraud Investigation Filter Toolbar
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  ShieldAlert, 
-  AlertTriangle, 
-  Download, 
-  Plus, 
-  RotateCw, 
+import React, { useState } from 'react';
+import {
+  Search,
+  ShieldAlert,
+  AlertTriangle,
+  Download,
+  Plus,
+  RotateCw,
   ChevronDown,
   FileCheck2,
   CheckCircle2,
@@ -48,38 +48,21 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   onManualRefresh,
   pendingCount = 0,
 }) => {
-  const [autoRefreshSeconds, setAutoRefreshSeconds] = useState(15);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setAutoRefreshSeconds((prev) => {
-        if (prev <= 1) {
-          setIsRefreshing(true);
-          setTimeout(() => setIsRefreshing(false), 800);
-          return 15;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
-    setAutoRefreshSeconds(15);
     onManualRefresh();
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
   const statusTabs = [
     { id: 'all' as CaseStatus, label: 'Tất cả vụ vi phạm' },
-    { 
-      id: 'da_nop_cho_duyet' as CaseStatus, 
-      label: 'Đã có giải trình (Chờ duyệt)', 
-      badge: pendingCount > 0 ? pendingCount : undefined, 
-      badgeColor: 'bg-amber-500 text-white font-bold' 
+    {
+      id: 'da_nop_cho_duyet' as CaseStatus,
+      label: 'Đã có giải trình (Chờ duyệt)',
+      badge: pendingCount > 0 ? pendingCount : undefined,
+      badgeColor: 'bg-amber-500 text-white font-bold'
     },
     { id: 'cho_tai_xe_giai_trinh' as CaseStatus, label: 'Chờ tài xế giải trình' },
     { id: 'da_tha_loi' as CaseStatus, label: 'Đã tha lỗi / Minh oan' },
@@ -150,19 +133,19 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-slate-500" />
-              <span>Xuất biên bản vi phạm</span>
+              <span>Xuất biên bản</span>
             </button>
           )}
 
-          {/* Auto Refresh pill */}
+          {/* Manual Refresh button: small square icon-only */}
           <button
             id="btn-manual-refresh"
             onClick={handleManualRefresh}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
-            title="Làm mới dữ liệu từ server"
+            disabled={isRefreshing}
+            className="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 hover:text-slate-900 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-60"
+            title="Làm mới dữ liệu"
           >
-            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#20B9BE]' : 'text-slate-400'}`} />
-            <span className="hidden sm:inline">Tự động quét: <strong>{autoRefreshSeconds}s</strong></span>
+            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#008284]' : 'text-slate-500'}`} />
           </button>
         </div>
       </div>
@@ -175,11 +158,10 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             <button
               key={tab.id}
               onClick={() => onStatusTabChange(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
-                isActive
-                  ? 'bg-[#008284] text-white shadow-2xs'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${isActive
+                  ? 'btn-gsm-primary'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
+                }`}
             >
               <span>{tab.label}</span>
               {tab.badge !== undefined && (

@@ -178,9 +178,9 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
             <button
               onClick={() => onCallDriver(ticket.driver.name, ticket.driver.phone)}
-              className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="px-3 py-1.5 btn-gsm-subtle rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <Phone className="w-3.5 h-3.5" />
+              <Phone className="w-3.5 h-3.5 text-[#008284]" />
               Gọi thoại đối soát
             </button>
           </div>
@@ -492,7 +492,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           {/* 1. Tha lỗi / Minh oan */}
           <button
             onClick={() => handleOpenDecisionModal('tha_loi')}
-            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+            className="px-3.5 py-2 btn-gsm-success font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             Tha Lỗi / Minh Oan

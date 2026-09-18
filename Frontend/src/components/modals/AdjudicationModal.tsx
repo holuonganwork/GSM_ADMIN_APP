@@ -329,7 +329,7 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
               type="submit"
               className={`px-5 py-2 font-bold rounded-xl text-xs text-white flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors ${
                 decisionType === 'tha_loi'
-                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  ? 'btn-gsm-success'
                   : decisionType === 'canh_cao'
                   ? 'bg-amber-600 hover:bg-amber-700'
                   : decisionType === 'yeu_cau_bo_sung'

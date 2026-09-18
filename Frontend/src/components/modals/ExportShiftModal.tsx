@@ -105,7 +105,7 @@ export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
           </button>
           <button
             onClick={handleDownloadCSV}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#008284] hover:bg-[#006f71] text-white text-xs font-bold rounded-lg shadow-xs active:scale-98"
+            className="flex items-center gap-1.5 px-4 py-2 btn-gsm-primary rounded-lg text-xs font-bold cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             Tải file CSV bàn giao
