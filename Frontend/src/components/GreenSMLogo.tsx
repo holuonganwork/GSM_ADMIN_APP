@@ -7,15 +7,30 @@ import React from 'react';
 
 interface GreenSMLogoProps {
   className?: string;
-  variant?: 'full' | 'icon' | 'portal';
+  variant?: 'full' | 'icon' | 'portal' | 'mini';
 }
 
 export const GreenSMLogo: React.FC<GreenSMLogoProps> = ({ className = '', variant = 'portal' }) => {
+  // Mini variant: just the authentic bird-wing mark
+  if (variant === 'mini') {
+    return (
+      <div className={`inline-flex items-center justify-center select-none ${className}`}>
+        <img 
+          src="/greensm-mini-logo.png" 
+          alt="Green SM Mini Logo" 
+          className="h-8 w-auto object-contain drop-shadow-xs"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    );
+  }
+
+  // Icon variant: square app icon
   if (variant === 'icon') {
     return (
       <div className={`relative flex items-center justify-center ${className}`}>
         <img 
-          src="/greensm-icon.svg" 
+          src="/greensm-icon.png" 
           alt="Green SM Icon" 
           className="w-full h-full object-contain"
           referrerPolicy="no-referrer"
@@ -24,11 +39,12 @@ export const GreenSMLogo: React.FC<GreenSMLogoProps> = ({ className = '', varian
     );
   }
 
+  // Full official logo
   if (variant === 'full') {
     return (
       <div className={`relative flex items-center ${className}`}>
         <img 
-          src="/greensm-logo.svg" 
+          src="/Green_SM_logo.svg.png" 
           alt="Green SM Operations" 
           className="h-9 object-contain"
           referrerPolicy="no-referrer"
@@ -37,28 +53,25 @@ export const GreenSMLogo: React.FC<GreenSMLogoProps> = ({ className = '', varian
     );
   }
 
-  // Portal variant (matches top-left of Image 4)
+  // Portal variant (matches top-left header of GSM Operations Portal)
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Visual Logo mark matching Image 1 & 2 */}
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-[#20B9BE] flex items-center justify-center shadow-xs">
-          <svg viewBox="0 0 32 32" className="w-5 h-5 text-white" fill="none">
-            <path 
-              d="M7 16.5L12 21.5L22.5 9.5M19.5 7L24.5 11M19.5 7L22.5 9.5" 
-              stroke="currentColor" 
-              strokeWidth="3.2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
-          </svg>
+      {/* Visual Mini Logo mark from official branding */}
+      <div className="flex items-center gap-2.5">
+        <div className="h-8 flex items-center justify-center">
+          <img 
+            src="/greensm-mini-logo.png" 
+            alt="Green SM Mini Logo" 
+            className="h-7 w-auto object-contain transition-transform hover:scale-105 duration-200"
+            referrerPolicy="no-referrer"
+          />
         </div>
         <div className="flex flex-col">
-          <div className="flex items-center text-[15px] font-extrabold tracking-tight leading-none">
-            <span className="text-[#0F172A]">GREEN</span>
-            <span className="text-[#20B9BE]">SM</span>
+          <div className="flex items-center text-[15px] font-black tracking-tight leading-none font-['Montserrat']">
+            <span className="text-[#008284]">GREEN</span>
+            <span className="text-[#E59800] ml-1">SM</span>
           </div>
-          <span className="text-[8px] font-bold text-[#20B9BE] tracking-[0.2em] leading-tight">
+          <span className="text-[8.5px] font-bold text-[#008284] tracking-[0.22em] leading-tight uppercase">
             OPERATIONS
           </span>
         </div>
@@ -72,7 +85,7 @@ export const GreenSMLogo: React.FC<GreenSMLogoProps> = ({ className = '', varian
         <span className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight">
           Green SM
         </span>
-        <span className="text-[9px] font-semibold text-[#20B9BE] tracking-wider uppercase leading-none">
+        <span className="text-[9px] font-semibold text-[#008284] tracking-wider uppercase leading-none">
           OPERATIONS PORTAL
         </span>
       </div>

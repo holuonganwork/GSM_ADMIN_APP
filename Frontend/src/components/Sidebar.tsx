@@ -65,8 +65,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Top Section: Title & Navigation */}
       <div className="p-3">
         {/* Header label matching Image 4: "KÊNH VẬN HÀNH GSM" */}
-        <div className="px-3 py-2 text-[11px] font-bold text-slate-400 tracking-wider uppercase">
-          KÊNH VẬN HÀNH GSM
+        <div className="flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+          <img src="/greensm-mini-logo.png" alt="GSM" className="h-3.5 w-auto object-contain opacity-80" />
+          <span>KÊNH VẬN HÀNH GSM</span>
         </div>
 
         <nav className="space-y-1 mt-1">

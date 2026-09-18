@@ -1,9 +1,9 @@
 @echo off
-title Green SM Operations Portal - Port 3000
+title Green SM Operations Portal - Frontend Dev
 echo ========================================================
 echo   Green SM Operations Portal (Vite + React)
-echo   Local URL: http://localhost:3000
+echo   Starting Frontend dev server...
 echo ========================================================
-cd /d "%~dp0"
+cd /d "%~dp0Frontend"
 npm run dev
 pause
