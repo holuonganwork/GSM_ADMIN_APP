@@ -1,18 +1,17 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * GSM Compliance & Fraud Investigation API Client
  */
 
 import {
-  Ticket,
-  ShiftMetrics,
-  DriverConversation,
-  ChatMessage,
-  DriverDirectoryItem,
-  FleetTelemetryPoint,
+  FraudCase,
+  ComplianceMetrics,
+  CaseDecision,
+  DriverComplianceInfo,
   AppNotification,
   OperatorProfile,
-  ResolutionData,
 } from '../types';
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
@@ -21,9 +20,6 @@ interface RequestOptions extends RequestInit {
   timeoutMs?: number;
 }
 
-/**
- * Core HTTP client with timeout and unified error handling
- */
 async function fetchApi<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { timeoutMs = 8000, ...fetchOptions } = options;
   const controller = new AbortController();
@@ -64,105 +60,63 @@ async function fetchApi<T>(endpoint: string, options: RequestOptions = {}): Prom
   }
 }
 
-// ----------------- Ticket API -----------------
-export const ticketApi = {
-  async getTickets(params?: {
+// ----------------- Compliance & Fraud Cases API -----------------
+export const complianceApi = {
+  async getCases(params?: {
     status?: string;
-    priority?: string;
-    vehicle?: string;
+    fraudType?: string;
+    severity?: string;
     search?: string;
-  }): Promise<Ticket[]> {
+  }): Promise<FraudCase[]> {
     const query = new URLSearchParams();
     if (params?.status && params.status !== 'all') query.set('status', params.status);
-    if (params?.priority && params.priority !== 'all') query.set('priority', params.priority);
-    if (params?.vehicle && params.vehicle !== 'all') query.set('vehicle', params.vehicle);
+    if (params?.fraudType && params.fraudType !== 'all') query.set('fraudType', params.fraudType);
+    if (params?.severity && params.severity !== 'all') query.set('severity', params.severity);
     if (params?.search) query.set('search', params.search);
 
     const qs = query.toString();
-    return fetchApi<Ticket[]>(`/tickets${qs ? `?${qs}` : ''}`);
+    return fetchApi<FraudCase[]>(`/compliance/cases${qs ? `?${qs}` : ''}`);
   },
 
-  async getTicketById(id: string): Promise<Ticket> {
-    return fetchApi<Ticket>(`/tickets/${encodeURIComponent(id)}`);
+  async getCaseById(id: string): Promise<FraudCase> {
+    return fetchApi<FraudCase>(`/compliance/cases/${encodeURIComponent(id)}`);
   },
 
-  async createTicket(ticket: Partial<Ticket>): Promise<Ticket> {
-    return fetchApi<Ticket>('/tickets', {
+  async submitDecision(
+    id: string,
+    decision: Omit<CaseDecision, 'decidedAt' | 'officerName' | 'officerCode'> & {
+      officerName?: string;
+      officerCode?: string;
+    }
+  ): Promise<FraudCase> {
+    return fetchApi<FraudCase>(`/compliance/cases/${encodeURIComponent(id)}/decision`, {
       method: 'POST',
-      body: JSON.stringify(ticket),
+      body: JSON.stringify(decision),
     });
   },
 
-  async updateTicket(id: string, updates: Partial<Ticket>): Promise<Ticket> {
-    return fetchApi<Ticket>(`/tickets/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updates),
-    });
-  },
-
-  async closeTicket(id: string, resolution?: Partial<ResolutionData>): Promise<Ticket> {
-    return fetchApi<Ticket>(`/tickets/${encodeURIComponent(id)}/close`, {
+  async requestMoreEvidence(id: string, note: string): Promise<FraudCase> {
+    return fetchApi<FraudCase>(`/compliance/cases/${encodeURIComponent(id)}/request-evidence`, {
       method: 'POST',
-      body: JSON.stringify(resolution || {}),
+      body: JSON.stringify({ note }),
     });
   },
-};
 
-// ----------------- Shift Metrics API -----------------
-export const metricsApi = {
-  async getShiftMetrics(): Promise<ShiftMetrics> {
-    return fetchApi<ShiftMetrics>('/metrics/shift');
-  },
-};
-
-// ----------------- Driver Chat API -----------------
-export const chatApi = {
-  async getConversations(): Promise<DriverConversation[]> {
-    return fetchApi<DriverConversation[]>('/chat/conversations');
+  async getMetrics(): Promise<ComplianceMetrics> {
+    return fetchApi<ComplianceMetrics>('/compliance/metrics');
   },
 
-  async getMessages(conversationId: string | number): Promise<ChatMessage[]> {
-    return fetchApi<ChatMessage[]>(`/chat/conversations/${conversationId}/messages`);
+  async getDriverByCccd(cccd: string): Promise<DriverComplianceInfo> {
+    return fetchApi<DriverComplianceInfo>(`/compliance/drivers/${encodeURIComponent(cccd)}`);
   },
 
-  async sendMessage(conversationId: string | number, text: string): Promise<ChatMessage> {
-    return fetchApi<ChatMessage>(`/chat/conversations/${conversationId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ text }),
-    });
-  },
-};
-
-// ----------------- Fleet Telematics & Map API -----------------
-export const fleetApi = {
-  async getFleetPoints(filter?: string): Promise<FleetTelemetryPoint[]> {
-    const qs = filter && filter !== 'all' ? `?filter=${encodeURIComponent(filter)}` : '';
-    return fetchApi<FleetTelemetryPoint[]>(`/fleet/points${qs}`);
-  },
-};
-
-// ----------------- Driver Directory API -----------------
-export const driverApi = {
-  async getDrivers(search?: string): Promise<DriverDirectoryItem[]> {
+  async getAllDrivers(search?: string): Promise<DriverComplianceInfo[]> {
     const qs = search ? `?search=${encodeURIComponent(search)}` : '';
-    return fetchApi<DriverDirectoryItem[]>(`/drivers${qs}`);
+    return fetchApi<DriverComplianceInfo[]>(`/compliance/drivers${qs}`);
   },
 };
 
-// ----------------- Notifications API -----------------
-export const notificationApi = {
-  async getNotifications(): Promise<AppNotification[]> {
-    return fetchApi<AppNotification[]>('/notifications');
-  },
-
-  async markAsRead(id: string | number): Promise<void> {
-    return fetchApi<void>(`/notifications/${id}/read`, {
-      method: 'POST',
-    });
-  },
-};
-
-// ----------------- Operator Profile API -----------------
+// ----------------- Operator & Notifications API -----------------
 export const operatorApi = {
   async getProfile(): Promise<OperatorProfile> {
     return fetchApi<OperatorProfile>('/operator/profile');
@@ -176,9 +130,29 @@ export const operatorApi = {
   },
 };
 
-// ----------------- System Health API -----------------
-export const systemApi = {
-  async checkHealth(): Promise<{ status: string; timestamp: string }> {
-    return fetchApi<{ status: string; timestamp: string }>('/health', { timeoutMs: 3000 });
+export const notificationApi = {
+  async getNotifications(): Promise<AppNotification[]> {
+    return fetchApi<AppNotification[]>('/notifications');
   },
+
+  async markAsRead(id: string | number): Promise<void> {
+    return fetchApi<void>(`/notifications/${id}/read`, {
+      method: 'POST',
+    });
+  },
+};
+
+// Compatibility aliases for App components
+export const ticketApi = {
+  getTickets: complianceApi.getCases,
+  getTicketById: complianceApi.getCaseById,
+  closeTicket: async (id: string) => complianceApi.submitDecision(id, {
+    decisionType: 'tha_loi',
+    reason: 'Hoàn tất thẩm định',
+    messageToDriver: 'Hồ sơ của bạn đã được đóng và xử lý.',
+  }),
+};
+
+export const metricsApi = {
+  getShiftMetrics: complianceApi.getMetrics,
 };

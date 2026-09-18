@@ -4,13 +4,13 @@
  */
 
 import React from 'react';
-import { X, Download, FileSpreadsheet, CheckCircle2, Clock } from 'lucide-react';
-import { ShiftMetrics, OperatorProfile, defaultOperatorProfile } from '../../types';
+import { X, Download, FileSpreadsheet, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
+import { ComplianceMetrics, OperatorProfile, defaultOperatorProfile } from '../../types';
 
 interface ExportShiftModalProps {
   isOpen: boolean;
   onClose: () => void;
-  metrics: ShiftMetrics;
+  metrics: ComplianceMetrics;
   operatorProfile?: OperatorProfile;
 }
 
@@ -24,16 +24,16 @@ export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
 
   const handleDownloadCSV = () => {
     const csvContent = [
-      ['Thong So', 'Gia Tri'],
+      ['Thong So Kiem Soat', 'Gia Tri'],
       ['Ca truc', `${operatorProfile.shift} (${operatorProfile.shiftTime})`],
-      ['Dieu phoi vien', `${operatorProfile.name} (${operatorProfile.code})`],
-      ['Tong ticket trong ca', metrics.totalTickets],
-      ['Da dong', metrics.closedTickets],
-      ['Dang xu ly', metrics.inProgressTickets],
-      ['Su co khan cap P1', metrics.emergencyP1Count],
-      ['SLA trung binh (phut)', metrics.avgSlaMinutes],
-      ['Ty le giai quyet FCR (%)', metrics.fcrRatePercent],
-      ['Danh gia tai xe', `${metrics.driverRating} / 5.0`],
+      ['Chuyen vien tham dinh', `${operatorProfile.name} (${operatorProfile.code})`],
+      ['Tong vu gian lan ghi nhan', metrics.totalCases],
+      ['Ho so cho tham dinh', metrics.pendingReview],
+      ['So vu da tha loi / minh oan', metrics.exoneratedCount],
+      ['So vu da xu phat & truy thu', metrics.penalizedCount],
+      ['Tong tien phat va truy thu (VND)', metrics.totalFinesRecovered],
+      ['Thoi gian tham dinh trung binh (gio)', metrics.avgReviewTimeHours],
+      ['Ty le dung han SLA (%)', `${metrics.slaCompliancePercent}%`],
     ]
       .map((e) => e.join(','))
       .join('\n');
@@ -42,7 +42,7 @@ export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Bao_cao_ca_truc_GSM_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `Bao_cao_kiem_soat_gian_lan_GSM_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -69,20 +69,30 @@ export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
 
         <div className="my-4 space-y-2.5 text-xs text-slate-700">
           <div className="flex justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-200/60">
-            <span>Tổng số sự cố tiếp nhận:</span>
-            <strong className="text-slate-900 font-bold">{metrics.totalTickets} tickets</strong>
+            <span>Tổng số vụ nghi vấn ghi nhận:</span>
+            <strong className="text-slate-900 font-bold">{metrics.totalCases} hồ sơ</strong>
+          </div>
+          <div className="flex justify-between p-2.5 bg-amber-50/60 rounded-lg border border-amber-200/60">
+            <span>Biên bản giải trình chờ thẩm định:</span>
+            <strong className="text-amber-700 font-bold">{metrics.pendingReview} hồ sơ</strong>
+          </div>
+          <div className="flex justify-between p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-200/60">
+            <span>Đã tha lỗi / minh oan:</span>
+            <strong className="text-emerald-700 font-bold">{metrics.exoneratedCount} hồ sơ</strong>
+          </div>
+          <div className="flex justify-between p-2.5 bg-rose-50/60 rounded-lg border border-rose-200/60">
+            <span>Đã xử phạt & truy thu:</span>
+            <strong className="text-rose-700 font-bold">{metrics.penalizedCount} hồ sơ</strong>
           </div>
           <div className="flex justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-200/60">
-            <span>Đã xử lý dứt điểm:</span>
-            <strong className="text-emerald-600 font-bold">{metrics.closedTickets} tickets</strong>
+            <span>Tổng tiền phạt & truy thu:</span>
+            <strong className="text-emerald-700 font-bold font-mono">
+              {metrics.totalFinesRecovered ? `${metrics.totalFinesRecovered.toLocaleString('vi-VN')} đ` : '0 đ'}
+            </strong>
           </div>
           <div className="flex justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-200/60">
-            <span>Thời gian phản hồi SLA trung bình:</span>
-            <strong className="text-slate-900 font-bold">{metrics.avgSlaMinutes} phút</strong>
-          </div>
-          <div className="flex justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-200/60">
-            <span>Tỷ lệ hài lòng của tài xế:</span>
-            <strong className="text-[#008284] font-bold">{metrics.driverRating} / 5.0 ★</strong>
+            <span>Tỷ lệ xử lý đúng hạn cam kết (SLA):</span>
+            <strong className="text-[#008284] font-bold">{metrics.slaCompliancePercent}%</strong>
           </div>
         </div>
 

@@ -1,26 +1,31 @@
 # GSM-ADMIN Backend API Specification (Đặc Tả Kỹ Thuật API)
+## Cổng Kiểm Soát Tuân Thủ & Thẩm Định Giải Trình Gian Lận GSM
 
-Tài liệu này quy chuẩn toàn bộ các API endpoints mà giao diện quản trị điều hành Green SM (**GSM Operations Portal**) kết nối.
-Các dịch vụ Backend (Node.js/Express, FastAPI, NestJS, Go, v.v.) cần tuân thủ cấu trúc dữ liệu và chuẩn phản hồi sau.
+Tài liệu này quy chuẩn toàn bộ các API endpoints mà giao diện Cổng Kiểm Soát Tuân Thủ GSM (**GSM Operations Portal - Fraud & Compliance Desk**) kết nối với hệ thống Backend.
 
 - **Base URL:** `/api` (hoặc cấu hình qua biến môi trường `VITE_API_URL`)
 - **Định dạng dữ liệu:** `application/json`
 - **Mã hóa:** `UTF-8`
 
+> [!IMPORTANT]
+> **Quy định về thông tin định danh tài xế:**
+> Theo yêu cầu nghiệp vụ tuân thủ pháp lý, đối tượng tài xế **bắt buộc có Số CCCD (12 chữ số)** để tra cứu và truy vết hồ sơ chế tài xuyên suốt.
+> **Tuyệt đối không có trường "Đội xe"** trong toàn bộ payload và giao diện.
+
 ---
 
-## 1. Xác thực & Thông tin Điều phối viên (Operator Profile)
+## 1. Thông Tin Chuyên Viên Thẩm Định (Operator Profile)
 
 ### `GET /api/operator/profile`
-Lấy thông tin tài khoản điều phối viên đang đăng nhập và ca trực hiện tại.
+Lấy thông tin tài khoản chuyên viên kiểm soát đang trực ca.
 
 **Response 200 OK:**
 ```json
 {
   "id": "op-001",
   "name": "Nguyễn Mai Chi",
-  "code": "GSM-889",
-  "role": "Chuyên viên Điều phối GSM",
+  "code": "GSM-INSPECT-88",
+  "role": "Chuyên viên Ban Kiểm Soát Tuân Thủ",
   "shift": "Ca sáng",
   "shiftTime": "07:00 - 15:00",
   "avatarUrl": "/avatar-chi.svg",
@@ -29,7 +34,7 @@ Lấy thông tin tài khoản điều phối viên đang đăng nhập và ca tr
 ```
 
 ### `PATCH /api/operator/status`
-Cập nhật trạng thái làm việc của điều phối viên (`online` | `break` | `busy`).
+Cập nhật trạng thái làm việc của chuyên viên (`online` | `break` | `busy`).
 
 **Request Body:**
 ```json
@@ -40,237 +45,150 @@ Cập nhật trạng thái làm việc của điều phối viên (`online` | `b
 
 ---
 
-## 2. Quản lý Sự cố & Điều phối (Tickets API)
+## 2. Quản Lý Hồ Sơ Gian Lận & Giải Trình (Compliance Cases API)
 
-### `GET /api/tickets`
-Lấy danh sách ticket cần xử lý trong ca trực với các bộ lọc linh hoạt.
+### `GET /api/compliance/cases`
+Lấy danh sách các hồ sơ nghi vấn gian lận và biên bản giải trình với các bộ lọc nghiệp vụ.
 
 **Query Parameters:**
-- `status` *(optional)*: `all` | `cho_tiep_nhan` | `dang_xu_ly` | `cho_tai_xe` | `cho_quan_ly` | `hoan_tat`
-- `priority` *(optional)*: `all` | `P1` | `P2` | `P3` | `P4`
-- `vehicle` *(optional)*: `all` | tên model xe (vd: `VF e34`, `VF 8`, `VF 5`)
-- `search` *(optional)*: Chuỗi tìm kiếm theo mã ticket, biển số xe, tên tài xế, tiêu đề sự cố
+- `status` *(optional)*: `all` | `cho_tai_xe_giai_trinh` | `da_nop_cho_duyet` | `yeu_cau_bo_sung` | `da_tha_loi` | `da_canh_cao` | `da_xu_phat`
+- `fraudType` *(optional)*: `all` | `cuoc_ao` | `gps_spoofing` | `gian_lan_voucher` | `thu_cuoc_sai` | `tat_dinh_vi` | `khac`
+- `severity` *(optional)*: `all` | `nghiem_trong` | `trung_binh` | `nhe`
+- `search` *(optional)*: Tìm kiếm theo mã hồ sơ (`#GL-8842`), số CCCD (`001094012845`), biển số xe, tên tài xế
 
 **Response 200 OK:**
 ```json
 [
   {
-    "id": "TK-8842",
-    "priority": "P1",
-    "priorityLabel": "P1 Khẩn cấp",
-    "title": "Xe báo lỗi cổng sạc DC tại trạm V-GREEN Times City - Mức pin còn 8%",
-    "description": "Tài xế đang chở khách, súng sạc không khoá cáp và báo lỗi mã đỏ trên màn hình trung tâm.",
-    "createdAt": "10:14 (03/05/2025)",
-    "timeAgo": "4 phút trước",
-    "slaDeadline": "10:25",
-    "slaRemainingSeconds": 342,
+    "id": "GL-8842",
+    "fraudType": "cuoc_ao",
+    "fraudTypeLabel": "Gian lận cuốc ảo (Bonus Hunting)",
+    "severity": "nghiem_trong",
+    "severityLabel": "Nghiêm trọng",
+    "createdAt": "09:30 (Hôm nay)",
+    "timeAgo": "25 phút trước",
+    "deadlineHours": 4,
     "driver": {
+      "id": "TX-0921",
       "name": "Lê Hoàng Long",
+      "cccd": "001094012845",
       "phone": "0912.345.678",
-      "initials": "LH",
-      "rating": 4.96,
-      "completedRides": 1420
-    },
-    "vehicle": {
-      "model": "VinFast VF e34",
       "plate": "29E-521.84",
-      "batterySoC": 8,
-      "estimatedKm": 26,
-      "status": "Đang đỗ (P)",
-      "bmsCode": "DC_TIMEOUT_09",
-      "location": "Hầm B2 Times City, 458 Minh Khai, Q. Hai Bà Trưng",
-      "speed": 0
+      "vehicleModel": "VinFast VF e34",
+      "trustScore": 48,
+      "priorViolationsCount": 1,
+      "completedRides": 1420,
+      "rating": 4.88
     },
-    "chargingStation": {
-      "name": "Trụ DC 60kW #04",
-      "hub": "Hầm B2 Times City, Phân khu Park Hill",
-      "status": "Cổng kẹt chốt khoá",
-      "stationId": "VG-HN-0482",
-      "chargerType": "DC Fast Charge 60kW - CCS2"
+    "evidence": {
+      "tripId": "TRIP-99014",
+      "tripCode": "GSM-TRIP-HN-99014",
+      "detectedAt": "09:28 (18/09/2026)",
+      "anomalyTitle": "Quãng đường GPS app 14.5km nhưng hộp đen T-Box xe VinFast báo di chuyển 0.1km",
+      "anomalyDescription": "Hệ thống Telematics ghi nhận trạng thái xe luôn ở chế độ Đỗ (P) tại bãi xe Time City trong suốt thời gian nhận và trả khách.",
+      "fareAmount": 185000,
+      "voucherAmount": 50000,
+      "bonusClaimed": 350000,
+      "pickup": "Khu đô thị Times City, Hai Bà Trưng, Hà Nội",
+      "dropoff": "Số 1 Đinh Tiên Hoàng, Hoàn Kiếm, Hà Nội",
+      "gpsDistanceKm": 14.5,
+      "telematicsActualKm": 0.12,
+      "maxSpeedKmh": 0,
+      "deviceImeiSameAsCustomer": true,
+      "telematicsLogs": [
+        { "id": "l1", "time": "09:10", "event": "Khởi tạo cuốc xe", "detail": "Trùng IMEI với khách", "severity": "high" }
+      ]
     },
-    "status": "dang_xu_ly",
-    "statusLabel": "Đang xử lý",
-    "coordinator": "Nguyễn Mai Chi",
-    "aiRecommendation": {
-      "confidence": 96,
-      "text": "Phát hiện Trụ sạc số 06 (DC 60kW) cách 15m đang trống...",
-      "actionText": "Áp dụng giải pháp đề xuất này",
-      "subActionText": "Xem xe sạc lưu động khả dụng"
+    "explanation": {
+      "id": "EXP-0921-01",
+      "submittedAt": "09:45 (Hôm nay)",
+      "driverStatement": "Tôi nhận chuyến từ khách nhưng xe gặp trục trặc hệ thống điều hòa...",
+      "attachments": [
+        { "id": "att1", "name": "anh_chup_dong_ho_xe.jpg", "url": "/mock-evidence-1.jpg", "type": "image" }
+      ],
+      "acceptedFault": false
     },
-    "history": [
-      {
-        "id": "h1",
-        "time": "10:14",
-        "source": "Hệ thống GSM Telematics",
-        "badge": "Tự động kích hoạt",
-        "badgeType": "system",
-        "text": "Cảnh báo xe SOC < 10% kết nối sạc không thành công tại Trụ 04."
-      }
-    ],
-    "resolution": {
-      "action": "Hướng dẫn đổi trụ sạc lân cận & cấp voucher",
-      "rootCause": "Lỗi phần mềm trụ sạc (Firmware handshake timeout)",
-      "internalNote": "Đã nhả súng sạc Trụ 04 thành công.",
-      "driverMessage": "Kính gửi Bác tài Long, trụ số 06 đã sẵn sàng nạp năng lượng...",
-      "autoVoucher": true,
-      "reportVGreen": true,
-      "authorityLevel": "Phê duyệt bởi Điều phối viên chính thức"
-    }
+    "status": "da_nop_cho_duyet",
+    "statusLabel": "Đã nộp giải trình - Chờ thẩm định"
   }
 ]
 ```
 
-### `GET /api/tickets/:id`
-Lấy chi tiết một ticket.
+---
 
-### `POST /api/tickets`
-Tạo mới một ticket sự cố từ tổng đài hoặc lái xe.
+### `GET /api/compliance/cases/:id`
+Lấy chi tiết toàn bộ hồ sơ vi phạm, chứng cứ kỹ thuật Telematics và biên bản giải trình của tài xế.
+
+---
+
+### `POST /api/compliance/cases/:id/decision`
+Kiểm soát viên ra phán quyết chính thức: **Tha lỗi / Minh oan**, **Cảnh cáo**, **Yêu cầu bổ sung**, **Phạt tiền / Truy thu**, **Tạm khóa app**, hoặc **Khóa vĩnh viễn**.
 
 **Request Body:**
 ```json
 {
-  "priority": "P1",
-  "title": "Xe sự cố nguồn 12V",
-  "description": "Không khởi động được sau khi dừng đèn đỏ",
-  "driver": {
-    "name": "Trần Văn A",
-    "phone": "0987.654.321"
-  },
-  "vehicle": {
-    "model": "VinFast VF 8",
-    "plate": "30K-123.45",
-    "batterySoC": 45,
-    "location": "Ngã tư Nguyễn Trãi - Khuất Duy Tiến"
-  }
+  "decisionType": "xu_phat_tien",
+  "fineAmount": 850000,
+  "suspensionDays": 0,
+  "reason": "Phát hiện cuốc ảo có chủ đích nhằm trục lợi thưởng ngày.",
+  "messageToDriver": "Hệ thống GSM thông báo: Bạn bị truy thu 350.000đ tiền thưởng gian lận và phạt chế tài 500.000đ trừ ví tài xế.",
+  "officerName": "Nguyễn Mai Chi",
+  "officerCode": "GSM-INSPECT-88"
 }
 ```
 
-### `PATCH /api/tickets/:id`
-Cập nhật thông tin, trạng thái hoặc phương án xử lý ticket.
+**Giá trị hợp lệ của `decisionType`:**
+- `tha_loi`: Chấp nhận giải trình, minh oan cho tài xế, khôi phục điểm tín nhiệm.
+- `canh_cao`: Gửi thư cảnh cáo vi phạm quy chế tuân thủ lần đầu.
+- `yeu_cau_bo_sung`: Yêu cầu tài xế nộp thêm video/hình ảnh chứng cứ trong 24 giờ.
+- `xu_phat_tien`: Thu hồi tiền thưởng gian lận và phạt vi phạm vào ví tài xế.
+- `tam_khoa`: Tạm ngưng nhận cuốc từ 3 đến 30 ngày.
+- `khoa_vinh_vien`: Chấm dứt hợp đồng hợp tác, đưa CCCD vào danh sách đen (Blacklist).
 
-### `POST /api/tickets/:id/close`
-Đóng ticket và hoàn tất ca xử lý.
+**Response 200 OK:**
+Trả về đối tượng `FraudCase` đã cập nhật với `status = 'da_xu_phat'` hoặc `'da_tha_loi'`, và trường `decision` được ghi nhận.
+
+---
+
+### `POST /api/compliance/cases/:id/request-evidence`
+Gửi thông báo đẩy về ứng dụng `GSM-Driver` yêu cầu tài xế bổ sung biên bản giải trình hoặc tài liệu minh chứng.
 
 **Request Body:**
 ```json
 {
-  "action": "Đã điều phối xe cứu hộ và bàn giao khách",
-  "rootCause": "Sự cố pin 12V",
-  "internalNote": "Xử lý thành công trong 12 phút"
+  "note": "Vui lòng cung cấp hình ảnh lịch sử nạp tiền hoặc xác nhận của hành khách tại điểm trả."
 }
 ```
 
 ---
 
-## 3. Chỉ Số & Hiệu Suất Ca Trực (Shift Metrics & SLA)
+## 3. Chỉ Số Thống Kê Tuân Thủ (Compliance Metrics API)
 
-### `GET /api/metrics/shift`
-Lấy chỉ số thời gian thực phục vụ hiển thị 4 thẻ KPI hàng đầu và báo cáo SLA.
+### `GET /api/compliance/metrics`
+Lấy các chỉ số KPI tuân thủ trong ca làm việc.
 
 **Response 200 OK:**
 ```json
 {
-  "totalTickets": 45,
-  "trendPercentage": 5.2,
-  "closedTickets": 38,
-  "inProgressTickets": 7,
-  "emergencyTickets": 2,
-  "emergencyP1Count": 1,
-  "emergencySubText": ["1 sạc pin <10%", "1 va chạm"],
-  "avgSlaMinutes": 2.6,
-  "slaTargetMinutes": 3.5,
-  "responseSpeedFasterPercent": 25,
-  "fcrRatePercent": 93.5,
-  "fcrTargetPercent": 90.0,
-  "driverRating": 4.95,
-  "shiftSlaPercent": 98.6,
-  "shiftProcessed": 38,
-  "shiftBacklog": 1
+  "totalCases": 28,
+  "pendingReview": 6,
+  "exoneratedCount": 11,
+  "penalizedCount": 9,
+  "totalFinesRecovered": 18500000,
+  "avgReviewTimeHours": 3.4,
+  "slaCompliancePercent": 96.4
 }
 ```
 
 ---
 
-## 4. Kênh Trò Chuyện & Nhắn Tin Tài Xế (Driver Chat API)
+## 4. Tra Cứu Tín Nhiệm Tài Xế Theo CCCD (Driver Compliance Directory)
 
-### `GET /api/chat/conversations`
-Lấy danh sách các cuộc hội thoại chat với tài xế.
-
-**Response 200 OK:**
-```json
-[
-  {
-    "id": "c1",
-    "driverName": "Lê Hoàng Long",
-    "phone": "0912.345.678",
-    "car": "VF e34 • 29E-521.84",
-    "lastMessage": "Dạ súng đã kêu tách mở rồi chị ơi...",
-    "time": "10:17",
-    "unread": 1,
-    "priority": "P1"
-  }
-]
-```
-
-### `GET /api/chat/conversations/:id/messages`
-Lấy danh sách tin nhắn của một cuộc hội thoại.
-
-### `POST /api/chat/conversations/:id/messages`
-Gửi tin nhắn phản hồi tới tài xế.
-
-**Request Body:**
-```json
-{
-  "text": "Chào Bác tài, đội cứu hộ đang tới hỗ trợ nhé."
-}
-```
-
----
-
-## 5. Bản Đồ Giám Sát Đội Xe & Điểm Sạc (Fleet Map API)
-
-### `GET /api/fleet/points`
-Lấy tọa độ thời gian thực của xe GSM và các trụ sạc V-GREEN.
+### `GET /api/compliance/drivers`
+Tìm kiếm danh bạ tài xế theo Số CCCD (12 số), tên hoặc biển số xe.
 
 **Query Parameters:**
-- `filter`: `all` | `vehicles` | `chargers`
-
-**Response 200 OK:**
-```json
-[
-  {
-    "id": "v-01",
-    "type": "vehicle",
-    "name": "VF e34 (29E-521.84)",
-    "driver": "Lê Hoàng Long",
-    "soc": 8,
-    "status": "Lỗi sạc",
-    "top": "48%",
-    "left": "52%",
-    "isAlert": true
-  },
-  {
-    "id": "ch-01",
-    "type": "charger",
-    "name": "Trạm V-GREEN Times City",
-    "slots": "12/16 trụ trống",
-    "typeDesc": "DC 60-150kW Supercharge",
-    "top": "50%",
-    "left": "55%",
-    "isAlert": false
-  }
-]
-```
-
----
-
-## 6. Danh Bạ Quản Lý Tài Xế (Driver Directory API)
-
-### `GET /api/drivers`
-Tìm kiếm và duyệt danh bạ tài xế.
-
-**Query Parameters:**
-- `search`: Từ khóa tìm kiếm theo tên, số điện thoại, biển số, đội xe.
+- `search` *(optional)*: Số CCCD hoặc tên tài xế
 
 **Response 200 OK:**
 ```json
@@ -278,30 +196,27 @@ Tìm kiếm và duyệt danh bạ tài xế.
   {
     "id": "TX-0921",
     "name": "Lê Hoàng Long",
+    "cccd": "001094012845",
     "phone": "0912.345.678",
-    "vehicle": "VinFast VF e34 (29E-521.84)",
-    "rating": 4.96,
-    "rides": 1420,
-    "team": "Đội 1 - Times City",
-    "status": "Sự cố sạc pin (P1)",
-    "statusColor": "bg-rose-100 text-rose-700"
+    "plate": "29E-521.84",
+    "vehicleModel": "VinFast VF e34",
+    "trustScore": 48,
+    "priorViolationsCount": 1,
+    "completedRides": 1420,
+    "rating": 4.88
   }
 ]
 ```
 
+### `GET /api/compliance/drivers/:cccd`
+Truy vấn toàn bộ lịch sử vi phạm, giải trình và điểm tín nhiệm của tài xế theo Số CCCD.
+
 ---
 
-## 7. Thông Báo Toàn Ca (Notifications API)
+## 5. Cảnh Báo & Thông Báo Ca Trực (Notifications API)
 
 ### `GET /api/notifications`
-Lấy danh sách cảnh báo thời gian thực gửi tới điều phối viên.
+Lấy danh sách các cảnh báo gian lận mới phát sinh và thông báo tài xế vừa gửi biên bản giải trình.
 
 ### `POST /api/notifications/:id/read`
-Đánh dấu thông báo đã xem.
-
----
-
-## 8. WebSocket Kênh Thời Gian Thực (Khuyến nghị)
-- Kênh sự cố khẩn cấp: `ws://host/api/ws/incidents` (bắn ticket mới và cập nhật trạng thái)
-- Kênh chat tài xế: `ws://host/api/ws/chat/:convId`
-- Kênh viễn thông đội xe (Telematics): `ws://host/api/ws/telematics`
+Đánh dấu thông báo đã đọc.

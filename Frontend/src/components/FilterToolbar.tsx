@@ -1,51 +1,56 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * Fraud Investigation Filter Toolbar
  */
 
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
-  Car, 
-  AlertCircle, 
+  ShieldAlert, 
+  AlertTriangle, 
   Download, 
   Plus, 
   RotateCw, 
-  ChevronDown 
+  ChevronDown,
+  FileCheck2,
+  CheckCircle2,
+  Gavel
 } from 'lucide-react';
-import { TicketStatus, TicketPriority } from '../types';
+import { CaseStatus, FraudType, CaseSeverity } from '../types';
 
 interface FilterToolbarProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  selectedVehicle: string;
-  onVehicleChange: (v: string) => void;
-  selectedPriority: string;
-  onPriorityChange: (p: string) => void;
-  currentStatusTab: TicketStatus;
-  onStatusTabChange: (status: TicketStatus) => void;
-  onOpenCreateTicket: () => void;
-  onExportShift: () => void;
+  selectedFraudType: string;
+  onFraudTypeChange: (type: string) => void;
+  selectedSeverity: string;
+  onSeverityChange: (sev: string) => void;
+  currentStatusTab: CaseStatus;
+  onStatusTabChange: (status: CaseStatus) => void;
+  onOpenCreateCase?: () => void;
+  onExportReport?: () => void;
   onManualRefresh: () => void;
+  pendingCount?: number;
 }
 
 export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   searchQuery,
   onSearchChange,
-  selectedVehicle,
-  onVehicleChange,
-  selectedPriority,
-  onPriorityChange,
+  selectedFraudType,
+  onFraudTypeChange,
+  selectedSeverity,
+  onSeverityChange,
   currentStatusTab,
   onStatusTabChange,
-  onOpenCreateTicket,
-  onExportShift,
+  onExportReport,
   onManualRefresh,
+  pendingCount = 0,
 }) => {
   const [autoRefreshSeconds, setAutoRefreshSeconds] = useState(15);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // 15-second countdown timer simulating live refresh
   useEffect(() => {
     const timer = setInterval(() => {
       setAutoRefreshSeconds((prev) => {
@@ -69,11 +74,16 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   };
 
   const statusTabs = [
-    { id: 'all' as TicketStatus, label: 'Tất cả (42)' },
-    { id: 'cho_tiep_nhan' as TicketStatus, label: 'Chờ tiếp nhận', badge: 12, badgeColor: 'bg-rose-500 text-white' },
-    { id: 'dang_xu_ly' as TicketStatus, label: 'Đang xử lý', badge: 18, badgeColor: 'bg-amber-100 text-amber-800' },
-    { id: 'cho_tai_xe' as TicketStatus, label: 'Chờ tài xế phản hồi (7)' },
-    { id: 'cho_quan_ly' as TicketStatus, label: 'Cần duyệt cấp quản lý (5)' },
+    { id: 'all' as CaseStatus, label: 'Tất cả vụ vi phạm' },
+    { 
+      id: 'da_nop_cho_duyet' as CaseStatus, 
+      label: 'Đã có giải trình (Chờ duyệt)', 
+      badge: pendingCount > 0 ? pendingCount : undefined, 
+      badgeColor: 'bg-amber-500 text-white font-bold' 
+    },
+    { id: 'cho_tai_xe_giai_trinh' as CaseStatus, label: 'Chờ tài xế giải trình' },
+    { id: 'da_tha_loi' as CaseStatus, label: 'Đã tha lỗi / Minh oan' },
+    { id: 'da_xu_phat' as CaseStatus, label: 'Đã xử phạt vi phạm' },
   ];
 
   return (
@@ -81,116 +91,105 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       {/* Top row: Search input & Action dropdowns */}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
-          {/* Quick ticket search input */}
-          <div className="relative w-48 sm:w-56">
+          {/* Quick search input: Case ID, Driver Name, CCCD, Plate */}
+          <div className="relative w-56 sm:w-64">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
-              id="filter-ticket-search"
+              id="filter-case-search"
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="TK-8842, biển số..."
+              placeholder="Tìm mã hồ sơ, CCCD, tên tài xế..."
               className="w-full pl-8 pr-3 py-1.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-[#20B9BE] rounded-lg text-xs font-medium text-slate-800 focus:outline-none transition-all"
             />
           </div>
 
-          {/* Vehicle Dropdown */}
+          {/* Fraud Type Dropdown */}
           <div className="relative">
             <select
-              id="filter-vehicle-select"
-              value={selectedVehicle}
-              onChange={(e) => onVehicleChange(e.target.value)}
+              id="filter-fraud-type-select"
+              value={selectedFraudType}
+              onChange={(e) => onFraudTypeChange(e.target.value)}
               className="appearance-none pl-8 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
             >
-              <option value="all">Tất cả xe (VF 5, e34, VF 8, Feliz)</option>
-              <option value="VF e34">VinFast VF e34</option>
-              <option value="VF 5 Plus">VinFast VF 5 Plus</option>
-              <option value="VF 8">VinFast VF 8</option>
-              <option value="VF 9">VinFast VF 9</option>
-              <option value="Feliz S">VinFast Feliz S (GreenBike)</option>
+              <option value="all">Tất cả loại vi phạm gian lận</option>
+              <option value="cuoc_ao">Cuốc ảo / Chạy khống (Bonus hunting)</option>
+              <option value="gps_spoofing">Giả lập vị trí GPS (Mock Location)</option>
+              <option value="gian_lan_voucher">Trục lợi mã giảm giá Voucher</option>
+              <option value="thu_cuoc_sai">Thu cước sai / Thu ngoài app</option>
+              <option value="tat_dinh_vi">Ngắt kết nối T-Box Telematics</option>
             </select>
-            <Car className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ShieldAlert className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Priority Dropdown */}
+          {/* Severity Dropdown */}
           <div className="relative">
             <select
-              id="filter-priority-select"
-              value={selectedPriority}
-              onChange={(e) => onPriorityChange(e.target.value)}
+              id="filter-severity-select"
+              value={selectedSeverity}
+              onChange={(e) => onSeverityChange(e.target.value)}
               className="appearance-none pl-8 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
             >
-              <option value="all">Tất cả mức ưu tiên</option>
-              <option value="P1">P1 Khẩn cấp (SLA &lt; 15p)</option>
-              <option value="P2">P2 Cao (SLA &lt; 30p)</option>
-              <option value="P3">P3 Bình thường (SLA &lt; 60p)</option>
-              <option value="P4">P4 Thấp</option>
+              <option value="all">Tất cả mức độ nghiêm trọng</option>
+              <option value="nghiem_trong">Nghiêm trọng (Cần đình chỉ)</option>
+              <option value="trung_binh">Trung bình (Thẩm định biên bản)</option>
+              <option value="nhe">Nhẹ (Xem xét nhắc nhở)</option>
             </select>
-            <AlertCircle className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <AlertTriangle className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
-        {/* Right buttons: Export & Create Ticket */}
+        {/* Right buttons: Export Report & Auto Refresh */}
         <div className="flex items-center gap-2">
-          <button
-            id="btn-export-shift"
-            onClick={onExportShift}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-2xs active:scale-98"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-600" />
-            <span>Xuất ca</span>
-          </button>
+          {onExportReport && (
+            <button
+              id="btn-export-report"
+              onClick={onExportReport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Xuất biên bản vi phạm</span>
+            </button>
+          )}
 
+          {/* Auto Refresh pill */}
           <button
-            id="btn-create-ticket"
-            onClick={onOpenCreateTicket}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#008284] hover:bg-[#006f71] text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-98"
+            id="btn-manual-refresh"
+            onClick={handleManualRefresh}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
+            title="Làm mới dữ liệu từ server"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Tạo Ticket mới</span>
+            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#20B9BE]' : 'text-slate-400'}`} />
+            <span className="hidden sm:inline">Tự động quét: <strong>{autoRefreshSeconds}s</strong></span>
           </button>
         </div>
       </div>
 
-      {/* Bottom row: Filter Tabs & Auto-refresh status */}
-      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-          {statusTabs.map((tab) => {
-            const isActive = currentStatusTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                id={`tab-status-${tab.id}`}
-                onClick={() => onStatusTabChange(tab.id)}
-                className={`px-3 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  isActive
-                    ? 'bg-[#20B9BE]/15 text-[#006768] font-bold shadow-2xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <span>{tab.label}</span>
-                {tab.badge && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Auto Refresh Status with countdown */}
-        <button
-          onClick={handleManualRefresh}
-          className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-700 font-medium transition-colors ml-auto cursor-pointer"
-          title="Bấm để làm mới ngay"
-        >
-          <RotateCw className={`w-3 h-3 text-[#20B9BE] ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>Tự động làm mới mỗi {autoRefreshSeconds}s</span>
-        </button>
+      {/* Bottom row: Status Category Tabs */}
+      <div className="flex items-center gap-1 overflow-x-auto pt-1 border-t border-slate-100 no-scrollbar">
+        {statusTabs.map((tab) => {
+          const isActive = currentStatusTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onStatusTabChange(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? 'bg-[#008284] text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {tab.badge !== undefined && (
+                <span className={`px-1.5 py-0.2 text-[10px] rounded-full ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

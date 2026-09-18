@@ -22,21 +22,22 @@ import { AppNotification, OperatorProfile, defaultOperatorProfile } from '../typ
 interface HeaderProps {
   onSearchChange: (query: string) => void;
   searchQuery: string;
-  onOpenSOS: () => void;
   onOpenNotifications?: () => void;
   operatorProfile?: OperatorProfile;
   notifications?: AppNotification[];
   onUpdateOperatorStatus?: (status: 'online' | 'break' | 'busy') => void;
+  onQuickFilterPending?: () => void;
+  pendingCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   searchQuery,
-  onOpenSOS,
-  onOpenNotifications,
   operatorProfile = defaultOperatorProfile,
   notifications = [],
   onUpdateOperatorStatus,
+  onQuickFilterPending,
+  pendingCount = 0,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [operatorStatus, setOperatorStatus] = useState<'online' | 'break' | 'busy'>(operatorProfile.status);
@@ -56,15 +57,15 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-      {/* Left: Logo & Shift Info */}
+      {/* Left: Logo & Department Info */}
       <div className="flex items-center gap-6">
         <GreenSMLogo />
 
         {/* Shift Badge & Online Status */}
         <div className="hidden lg:flex items-center gap-3 px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs">
           <div className="flex items-center gap-1.5 text-slate-700 font-medium">
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
-            <span>Ca: <strong className="text-slate-900 font-semibold">Sáng 07:00 - 15:00</strong></span>
+            <ShieldAlert className="w-3.5 h-3.5 text-[#008284]" />
+            <span>Ban: <strong className="text-slate-900 font-semibold">Kiểm Soát Tuân Thủ & Gian Lận</strong></span>
           </div>
           <div className="w-[1px] h-3.5 bg-slate-300"></div>
           <div className="flex items-center gap-1.5">
@@ -73,14 +74,14 @@ export const Header: React.FC<HeaderProps> = ({
               operatorStatus === 'break' ? 'bg-amber-500' : 'bg-rose-500'
             }`}></span>
             <span className="text-slate-700 font-medium">
-              {operatorStatus === 'online' ? 'Trực tuyến / Sẵn sàng' :
-               operatorStatus === 'break' ? 'Nghỉ giải lao' : 'Bận cuộc gọi'}
+              {operatorStatus === 'online' ? 'Đang thẩm định / Sẵn sàng' :
+               operatorStatus === 'break' ? 'Nghỉ giải lao' : 'Hội ý phán quyết'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Center/Right: Search, SOS Hotline, Notifications & Profile */}
+      {/* Center/Right: Search, Pending Review Badge, Notifications & Profile */}
       <div className="flex items-center gap-3.5">
         {/* Search Bar */}
         <div className="relative w-64 md:w-80">
@@ -90,21 +91,23 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Tìm mã ticket, biển số"
+            placeholder="Tìm mã hồ sơ, CCCD, biển số, tên TX..."
             className="w-full pl-9 pr-4 py-1.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-[#20B9BE] rounded-lg text-xs md:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all"
           />
         </div>
 
-        {/* SOS Hotline Button (Red button with star/phone icon as in Image 4) */}
-        <button
-          id="btn-sos-hotline"
-          onClick={onOpenSOS}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition-colors shadow-xs active:scale-98"
-        >
-          <span className="text-sm leading-none font-black">*</span>
-          <PhoneCall className="w-3.5 h-3.5" />
-          <span className="tracking-wide uppercase">SOS Hotline</span>
-        </button>
+        {/* Quick Pending Review Highlight */}
+        {pendingCount > 0 && (
+          <button
+            id="btn-quick-pending"
+            onClick={onQuickFilterPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-colors shadow-xs active:scale-98 cursor-pointer"
+            title="Xem các giải trình đang chờ thẩm định"
+          >
+            <Clock className="w-3.5 h-3.5 animate-spin" />
+            <span className="tracking-wide">{pendingCount} Hồ sơ chờ thẩm định</span>
+          </button>
+        )}
 
         {/* Notifications Icon with Badge */}
         <div className="relative">

@@ -1,40 +1,40 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * Fraud Case Investigation & Adjudication Detail Workspace
  */
 
 import React, { useState } from 'react';
-import { Ticket } from '../types';
 import { 
-  Printer, 
-  Share2, 
-  ChevronRight, 
-  User, 
-  Clock, 
-  BatteryCharging, 
-  BatteryLow,
-  Zap, 
-  Sparkles, 
-  Phone, 
-  MessageSquare, 
-  RotateCw, 
-  Truck, 
+  ShieldAlert, 
+  Gavel, 
   CheckCircle2, 
-  Save, 
+  FileText, 
+  Phone, 
+  AlertTriangle, 
+  IdCard, 
+  Car, 
+  ExternalLink, 
+  Clock, 
+  MapPin, 
+  Coins, 
+  Zap, 
+  FileCheck2,
+  Calendar,
   AlertCircle,
-  Radio,
-  ExternalLink,
-  Lock,
-  Plus
+  ShieldCheck
 } from 'lucide-react';
+import { FraudCase, DecisionType, CaseDecision } from '../types';
+import { AdjudicationModal } from './modals/AdjudicationModal';
 
 interface TicketDetailProps {
-  ticket: Ticket;
-  onUpdateTicket: (updated: Ticket) => void;
-  onCallDriver: (driverName: string, phone: string) => void;
-  onChatDriver: (driverName: string) => void;
-  onResetStation: (stationId: string) => void;
-  onOpenMobileCharging: () => void;
+  ticket: FraudCase;
+  onUpdateTicket: (updated: FraudCase) => void;
+  onCallDriver: (name: string, phone: string) => void;
+  onChatDriver?: (name: string) => void;
+  onResetStation?: (stationId: string) => void;
+  onOpenMobileCharging?: () => void;
   onCloseTicket: (ticketId: string) => void;
 }
 
@@ -42,573 +42,499 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   ticket,
   onUpdateTicket,
   onCallDriver,
-  onChatDriver,
-  onResetStation,
-  onOpenMobileCharging,
-  onCloseTicket,
 }) => {
-  const [resolutionAction, setResolutionAction] = useState(ticket.resolution.action);
-  const [rootCause, setRootCause] = useState(ticket.resolution.rootCause);
-  const [internalNote, setInternalNote] = useState(ticket.resolution.internalNote);
-  const [driverMessage, setDriverMessage] = useState(ticket.resolution.driverMessage);
-  const [autoVoucher, setAutoVoucher] = useState(ticket.resolution.autoVoucher);
-  const [reportVGreen, setReportVGreen] = useState(ticket.resolution.reportVGreen);
-  const [newLogText, setNewLogText] = useState('');
-  const [showAddLog, setShowAddLog] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'explanation' | 'evidence' | 'driver_history'>('explanation');
+  const [adjudicationModal, setAdjudicationModal] = useState<{
+    isOpen: boolean;
+    type: DecisionType;
+  }>({
+    isOpen: false,
+    type: 'tha_loi',
+  });
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+  const handleOpenDecisionModal = (type: DecisionType) => {
+    setAdjudicationModal({
+      isOpen: true,
+      type,
+    });
   };
 
-  const handleApplyAISolution = () => {
-    setResolutionAction('Hướng dẫn đổi trụ sạc lân cận & cấp voucher 50k');
-    setRootCause('Lỗi phần mềm trụ sạc (Firmware handshake timeout)');
-    setAutoVoucher(true);
-    setReportVGreen(true);
-    setDriverMessage(
-      'Green SM CSKH: Đã gửi lệnh mở khóa Trụ 04. Bác tài vui lòng chuyển sang Trụ #06 để tiếp tục sạc nhanh. Hệ thống đã tặng voucher 50.000đ vào ví GSM Driver của Bác tài.'
-    );
-
-    // Also add an automatic log entry
-    const newLog = {
-      id: `h-${Date.now()}`,
-      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      source: 'AI Dispatch Auto-Assistant',
-      badge: 'Đã áp dụng đề xuất',
-      badgeType: 'auto' as const,
-      text: 'Đã kích hoạt phương án mở khóa chốt Trụ 04, điều hướng xe sang Trụ 06 và lập lệnh giải ngân voucher 50.000đ.',
+  const handleApplyDecision = (decisionData: {
+    decisionType: DecisionType;
+    fineAmount?: number;
+    suspensionDays?: number;
+    reason: string;
+    messageToDriver: string;
+  }) => {
+    const updatedDecision: CaseDecision = {
+      ...decisionData,
+      decidedAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' (Hôm nay)',
+      officerName: 'Nguyễn Mai Chi',
+      officerCode: 'GSM-INSPECT-88',
     };
 
-    onUpdateTicket({
+    let updatedStatus: FraudCase['status'] = 'da_xu_phat';
+    let updatedStatusLabel = 'Đã xử phạt vi phạm';
+
+    if (decisionData.decisionType === 'tha_loi') {
+      updatedStatus = 'da_tha_loi';
+      updatedStatusLabel = 'Đã tha lỗi / Minh oan';
+    } else if (decisionData.decisionType === 'canh_cao') {
+      updatedStatus = 'da_canh_cao';
+      updatedStatusLabel = 'Đã nhắc nhở & cảnh cáo';
+    } else if (decisionData.decisionType === 'yeu_cau_bo_sung') {
+      updatedStatus = 'yeu_cau_bo_sung';
+      updatedStatusLabel = 'Đang chờ tài xế bổ sung chứng cứ';
+    }
+
+    const updatedCase: FraudCase = {
       ...ticket,
-      history: [...ticket.history, newLog],
-    });
-
-    showToast('Đã tự động điền và áp dụng phương án tối ưu từ AI Dispatch!');
-  };
-
-  const handleInsertMacro = () => {
-    setDriverMessage(
-      'Green SM CSKH: Trụ #' + (ticket.chargingStation ? '04' : '01') + 
-      ' đã được kiểm tra và xử lý. Bác tài vui lòng thực hiện theo hướng dẫn trên ứng dụng GSM Driver. Chúc Bác tài vạn dặm bình an!'
-    );
-    showToast('Đã chèn nội dung tin nhắn macro mẫu.');
-  };
-
-  const handleAddTimelineLog = () => {
-    if (!newLogText.trim()) return;
-
-    const newLog = {
-      id: `h-${Date.now()}`,
-      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      source: `Điều phối viên ${ticket.coordinator}`,
-      badge: 'Ghi nhận mới',
-      badgeType: 'agent' as const,
-      text: newLogText.trim(),
+      status: updatedStatus,
+      statusLabel: updatedStatusLabel,
+      decision: updatedDecision,
     };
 
-    onUpdateTicket({
-      ...ticket,
-      history: [...ticket.history, newLog],
-    });
-
-    setNewLogText('');
-    setShowAddLog(false);
-    showToast('Đã thêm ghi nhận vào dòng sự kiện ticket!');
-  };
-
-  const handleSaveProgress = () => {
-    onUpdateTicket({
-      ...ticket,
-      resolution: {
-        ...ticket.resolution,
-        action: resolutionAction,
-        rootCause,
-        internalNote,
-        driverMessage,
-        autoVoucher,
-        reportVGreen,
-      },
-    });
-    showToast('Đã lưu tiến độ xử lý ticket thành công!');
-  };
-
-  const handleCompleteAndClose = () => {
-    onCloseTicket(ticket.id);
+    onUpdateTicket(updatedCase);
   };
 
   return (
-    <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col relative">
-      {/* Toast alert notification */}
-      {toastMessage && (
-        <div className="absolute top-4 right-4 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 text-[#20B9BE]" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Detail Header matching Image 4 */}
-      <div className="p-4 border-b border-slate-200 bg-white">
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-          <div className="flex items-center gap-2.5">
-            <span className="px-2.5 py-1 bg-rose-600 text-white font-extrabold text-xs rounded-md tracking-wide">
-              {ticket.priority === 'P1' ? 'P1 KHẨN CẤP' : `${ticket.priority} ƯU TIÊN`}
+    <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col h-full">
+      {/* Top Bar: Case ID, Type, Severity & Action Status */}
+      <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-black text-slate-900 tracking-tight font-mono">
+              HỒ SƠ #{ticket.id}
             </span>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">
-              #{ticket.id} • {ticket.title}
-            </h2>
-          </div>
-
-          {/* Action buttons: Print, Share, Chuyển cấp */}
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => window.print()} 
-              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors"
-              title="In phiếu ticket"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => {
-                navigator.clipboard?.writeText(window.location.href);
-                showToast('Đã sao chép liên kết ticket vào clipboard');
-              }}
-              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors"
-              title="Chia sẻ ticket"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => showToast('Đã chuyển tiếp ticket lên Trưởng ca Điều phối GSM!')}
-              className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-800 text-xs font-semibold rounded-md border border-slate-200 transition-colors cursor-pointer"
-            >
-              <span className="text-[#20B9BE] font-bold">»</span>
-              <span>Chuyển cấp</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Metadata sub-row */}
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 pt-1">
-          <div className="flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-slate-400" />
-            <span>Điều phối viên: <strong className="text-slate-900 font-semibold">{ticket.coordinator}</strong></span>
-          </div>
-          <div className="w-[1px] h-3 bg-slate-200"></div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span>Khởi tạo: <strong className="text-slate-900 font-semibold">{ticket.createdAt}</strong></span>
-          </div>
-          <div className="w-[1px] h-3 bg-slate-200"></div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-rose-500" />
-            <span>Thời hạn cam kết SLA: <strong className="text-slate-900 font-semibold">{ticket.slaDeadline}</strong></span>
-            <span className="text-rose-600 font-bold ml-0.5">
-              ({ticket.slaRemainingSeconds < 0 ? `Quá hạn ${Math.abs(Math.floor(ticket.slaRemainingSeconds / 60))}p` : 'Còn 05:42'})
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+              <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+              {ticket.fraudTypeLabel}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+              ticket.severity === 'nghiem_trong' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+              ticket.severity === 'trung_binh' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+              'bg-blue-50 text-blue-700 border border-blue-200'
+            }`}>
+              Mức độ: {ticket.severityLabel}
             </span>
           </div>
+          <p className="text-xs text-slate-500">
+            Khởi tạo: {ticket.createdAt} • Hạn xử lý phán quyết: <strong>còn {ticket.deadlineHours} giờ</strong>
+          </p>
+        </div>
+
+        {/* Current status badge */}
+        <div className="flex items-center gap-2">
+          <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+            ticket.status === 'da_tha_loi' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+            ticket.status === 'da_xu_phat' ? 'bg-rose-50 text-rose-800 border-rose-300' :
+            ticket.status === 'da_nop_cho_duyet' ? 'bg-amber-50 text-amber-800 border-amber-300' :
+            'bg-slate-100 text-slate-700 border-slate-300'
+          }`}>
+            {ticket.statusLabel}
+          </span>
         </div>
       </div>
 
-      {/* Main Scrollable Detail Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/40">
-        {/* Section 1: DỮ LIỆU TELEMETRY & TÌNH TRẠNG XE ĐIỆN VINFAST */}
-        <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-2xs">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-[#20B9BE] animate-pulse" />
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                DỮ LIỆU TELEMETRY & TÌNH TRẠNG XE ĐIỆN VINFAST
-              </h3>
+      {/* Driver Identity Card - Strictly with CCCD and NO team info */}
+      <div className="p-4 bg-white border-b border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs">
+              {ticket.driver.name.slice(0, 2).toUpperCase()}
             </div>
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              Live Sync Telematics
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Box 1: SoC */}
-            <div className="p-3 bg-slate-50/80 rounded-lg border border-slate-200/60 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-slate-600 font-medium mb-1">
-                <span>Mức pin xe (SoC)</span>
-                <BatteryLow className="w-4 h-4 text-rose-600" />
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900">{ticket.driver.name}</h3>
+                <span className="text-[11px] text-slate-400 font-mono">({ticket.driver.id})</span>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-black text-rose-600 tracking-tight">
-                  {ticket.vehicle.batterySoC}%
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-0.5">
+                {/* Số CCCD nổi bật */}
+                <span className="flex items-center gap-1 font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  <IdCard className="w-3.5 h-3.5 text-[#20B9BE]" />
+                  CCCD: {ticket.driver.cccd}
                 </span>
-                <span className="text-xs text-slate-500 font-medium">
-                  Ước tính: ~{ticket.vehicle.estimatedKm} km
-                </span>
-              </div>
-              {/* Battery progress visual */}
-              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-2">
-                <div 
-                  className={`h-full rounded-full ${ticket.vehicle.batterySoC < 15 ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                  style={{ width: `${ticket.vehicle.batterySoC}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Box 2: Vehicle Status */}
-            <div className="p-3 bg-slate-50/80 rounded-lg border border-slate-200/60">
-              <div className="text-xs text-slate-600 font-medium mb-1">Tình trạng vận hành</div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-900">{ticket.vehicle.model}</span>
-                <span className="font-mono text-xs font-bold bg-slate-200/70 text-slate-800 px-1.5 py-0.5 rounded">
-                  {ticket.vehicle.plate}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="px-2 py-0.5 bg-slate-200/60 text-slate-700 text-[11px] font-semibold rounded">
-                  {ticket.vehicle.status}
-                </span>
-                <span className="px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-mono font-bold rounded border border-rose-200">
-                  {ticket.vehicle.bmsCode}
-                </span>
-              </div>
-            </div>
-
-            {/* Box 3: Charging Station */}
-            <div className="p-3 bg-slate-50/80 rounded-lg border border-slate-200/60">
-              <div className="flex items-center justify-between text-xs text-slate-600 font-medium mb-1">
-                <span>Trụ sạc kết nối</span>
-                <Zap className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div className="text-sm font-bold text-slate-900">
-                {ticket.chargingStation?.name || 'Trụ sạc thông minh V-GREEN'}
-              </div>
-              <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                {ticket.chargingStation?.hub || ticket.vehicle.location}
-              </div>
-              <div className="flex items-center justify-between mt-1.5 text-[11px]">
-                <span className="flex items-center gap-1 text-rose-600 font-semibold">
-                  <Lock className="w-3 h-3" />
-                  {ticket.chargingStation?.status || 'Bình thường'}
-                </span>
-                <span className="font-mono text-slate-500 text-[10px]">
-                  {ticket.chargingStation?.stationId || 'VG-HN-0482'}
+                <span className="font-mono text-slate-600">{ticket.driver.phone}</span>
+                <span className="text-slate-300">•</span>
+                <span className="flex items-center gap-1 text-slate-800 font-medium">
+                  <Car className="w-3.5 h-3.5 text-slate-400" />
+                  {ticket.driver.vehicleModel} - <strong className="font-mono">{ticket.driver.plate}</strong>
                 </span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Section 2: GỢI Ý AI DISPATCH GREEN SM */}
-        <div className="bg-[#E3F8F8]/60 border border-[#20B9BE]/40 rounded-xl p-3.5 shadow-2xs">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 text-[#006768] font-bold text-xs uppercase tracking-wide">
-              <Sparkles className="w-4 h-4 text-[#20B9BE]" />
-              <span>GỢI Ý AI DISPATCH GREEN SM</span>
+          <div className="flex items-center gap-3">
+            {/* Trust score indicator */}
+            <div className="text-right">
+              <div className="text-[11px] text-slate-500">Điểm Tín Nhiệm Tuân Thủ</div>
+              <div className="text-sm font-black">
+                <span className={ticket.driver.trustScore < 50 ? 'text-rose-600' : ticket.driver.trustScore < 75 ? 'text-amber-600' : 'text-emerald-600'}>
+                  {ticket.driver.trustScore}
+                </span>
+                <span className="text-slate-400 text-xs">/100</span>
+              </div>
             </div>
-            <span className="text-[11px] font-bold text-[#006768] bg-[#20B9BE]/20 px-2 py-0.5 rounded-full">
-              Độ tin cậy: {ticket.aiRecommendation.confidence}%
-            </span>
-          </div>
 
-          <p className="text-xs text-slate-700 leading-relaxed font-normal mb-3">
-            {ticket.aiRecommendation.text}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3">
             <button
-              id="btn-apply-ai-solution"
-              onClick={handleApplyAISolution}
-              className="px-3.5 py-1.5 bg-[#008284] hover:bg-[#006f71] text-white text-xs font-bold rounded-lg transition-all shadow-xs active:scale-98"
-            >
-              {ticket.aiRecommendation.actionText}
-            </button>
-            <button
-              onClick={onOpenMobileCharging}
-              className="text-xs text-[#006768] hover:text-[#004f50] font-semibold underline underline-offset-2 transition-colors cursor-pointer"
-            >
-              {ticket.aiRecommendation.subActionText || 'Xem xe sạc lưu động khả dụng (2 xe gần nhất)'}
-            </button>
-          </div>
-        </div>
-
-        {/* Section 3: TIẾN TRÌNH TRAO ĐỔI & LỊCH SỬ GHI NHẬN */}
-        <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-2xs">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                TIẾN TRÌNH TRAO ĐỔI & LỊCH SỬ GHI NHẬN
-              </h3>
-              <span className="text-[11px] text-slate-400 font-medium">
-                ({ticket.history.length} bản ghi)
-              </span>
-            </div>
-            <button
-              onClick={() => setShowAddLog(!showAddLog)}
-              className="text-[11px] font-semibold text-[#008284] hover:text-[#006768] flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Thêm ghi chú ca
-            </button>
-          </div>
-
-          {/* New log input box toggle */}
-          {showAddLog && (
-            <div className="mb-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-              <textarea
-                value={newLogText}
-                onChange={(e) => setNewLogText(e.target.value)}
-                placeholder="Nhập nội dung trao đổi hoặc lệnh điều phối mới..."
-                className="w-full text-xs p-2 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-[#20B9BE] min-h-[60px]"
-              />
-              <div className="flex justify-end gap-2 mt-2">
-                <button
-                  onClick={() => setShowAddLog(false)}
-                  className="px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-200 rounded-md"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleAddTimelineLog}
-                  className="px-3 py-1 bg-[#008284] text-white text-xs font-semibold rounded-md hover:bg-[#006f71]"
-                >
-                  Lưu vào lịch sử
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Timeline entries */}
-          <div className="space-y-3 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[1.5px] before:bg-slate-200">
-            {ticket.history.map((item) => {
-              const isCall = item.badgeType === 'call' || item.source.includes('Nguyễn Mai Chi');
-              const isSystem = item.badgeType === 'system';
-              const isAuto = item.badgeType === 'auto';
-
-              return (
-                <div key={item.id} className="relative flex items-start gap-3 pl-1 text-xs">
-                  {/* Icon dot */}
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 z-10 ${
-                    isCall ? 'bg-emerald-100 text-emerald-700' :
-                    isSystem ? 'bg-rose-100 text-rose-700' :
-                    isAuto ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-700'
-                  }`}>
-                    {isCall ? <Phone className="w-2.5 h-2.5" /> :
-                     isSystem ? <AlertCircle className="w-2.5 h-2.5" /> :
-                     <Radio className="w-2.5 h-2.5" />}
-                  </div>
-
-                  <div className="flex-1 bg-slate-50/70 p-2.5 rounded-lg border border-slate-200/60">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-bold text-slate-900 text-[11px]">
-                        {item.time} - {item.source}
-                      </span>
-                      <span className="text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                        {item.badge}
-                      </span>
-                    </div>
-                    <p className="text-slate-700 leading-relaxed text-[11px]">
-                      {item.text}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Section 4: KHU VỰC XỬ LÝ & KẾT LUẬN TICKET */}
-        <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              KHU VỰC XỬ LÝ & KẾT LUẬN TICKET
-            </h3>
-            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-              Thẩm quyền: {ticket.resolution.authorityLevel}
-            </span>
-          </div>
-
-          {/* Quick Action Buttons (Gọi tài xế, Chat điều phối, Reset trụ sạc, Điều xe sạc lưu động) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button
-              id="btn-call-driver"
               onClick={() => onCallDriver(ticket.driver.name, ticket.driver.phone)}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-98"
+              className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
             >
               <Phone className="w-3.5 h-3.5" />
-              <span>Gọi tài xế</span>
+              Gọi thoại đối soát
             </button>
-
-            <button
-              id="btn-chat-driver"
-              onClick={() => onChatDriver(ticket.driver.name)}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold border border-slate-200 transition-all active:scale-98"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-[#20B9BE]" />
-              <span>Chat điều phối</span>
-            </button>
-
-            <button
-              id="btn-reset-station"
-              onClick={() => onResetStation(ticket.chargingStation?.stationId || 'VG-HN-0482')}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold border border-slate-200 transition-all active:scale-98"
-            >
-              <RotateCw className="w-3.5 h-3.5 text-slate-600" />
-              <span>Reset trụ sạc</span>
-            </button>
-
-            <button
-              id="btn-mobile-charging"
-              onClick={onOpenMobileCharging}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold border border-slate-200 transition-all active:scale-98"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>Điều xe sạc lưu động</span>
-            </button>
-          </div>
-
-          {/* Resolution Dropdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Hành động giải quyết <span className="text-rose-500">*</span>
-              </label>
-              <select
-                id="select-resolution-action"
-                value={resolutionAction}
-                onChange={(e) => setResolutionAction(e.target.value)}
-                className="w-full text-xs p-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:border-[#20B9BE]"
-              >
-                <option value="Hướng dẫn đổi trụ sạc lân cận & cấp voucher">
-                  Hướng dẫn đổi trụ sạc lân cận & cấp voucher
-                </option>
-                <option value="Cử Đội cơ động GSM đến xử lý trực tiếp">
-                  Cử Đội cơ động GSM đến xử lý trực tiếp
-                </option>
-                <option value="Tài xế quay đầu bàn giao tài sản tại Quầy CSKH Ga T1">
-                  Tài xế quay đầu bàn giao tài sản tại Quầy CSKH
-                </option>
-                <option value="Reset modem viễn thông T-Box và khôi phục đồng bộ bản đồ">
-                  Reset modem viễn thông T-Box và khôi phục đồng bộ bản đồ
-                </option>
-                <option value="Hỗ trợ thông tin chính sách & nghiệp vụ ca">
-                  Hỗ trợ thông tin chính sách & nghiệp vụ ca
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Phân loại nguyên nhân sự cố <span className="text-rose-500">*</span>
-              </label>
-              <select
-                id="select-root-cause"
-                value={rootCause}
-                onChange={(e) => setRootCause(e.target.value)}
-                className="w-full text-xs p-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg font-medium text-slate-800 focus:outline-none focus:border-[#20B9BE]"
-              >
-                <option value="Lỗi phần mềm trụ sạc (Firmware handshake timeout)">
-                  Lỗi phần mềm trụ sạc (Firmware handshake timeout)
-                </option>
-                <option value="Khách hàng để quên đồ trên xe">
-                  Khách hàng để quên đồ trên xe
-                </option>
-                <option value="Va chạm giao thông mức độ nhẹ (Vỏ nhựa cản sau)">
-                  Va chạm giao thông mức độ nhẹ
-                </option>
-                <option value="Nghẽn trạm thu phát sóng di động BTS khu vực cầu">
-                  Nghẽn trạm thu phát sóng di động BTS
-                </option>
-                <option value="Thắc mắc chính sách doanh thu & đối soát">
-                  Thắc mắc chính sách doanh thu & đối soát
-                </option>
-              </select>
-            </div>
-          </div>
-
-          {/* Internal Operator Notes */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              Ghi chú nghiệp vụ ca trực (Nội bộ GSM)
-            </label>
-            <textarea
-              id="textarea-internal-note"
-              value={internalNote}
-              onChange={(e) => setInternalNote(e.target.value)}
-              rows={2}
-              className="w-full text-xs p-2.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#20B9BE] leading-relaxed"
-            />
-          </div>
-
-          {/* Driver Notification SMS/App message */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-bold text-slate-700">
-                Tin nhắn thông báo tự động gửi tới App GSM Driver của tài xế
-              </label>
-              <button
-                onClick={handleInsertMacro}
-                className="text-[11px] font-semibold text-[#008284] hover:underline"
-              >
-                Chèn macro mẫu
-              </button>
-            </div>
-            <input
-              id="input-driver-message"
-              type="text"
-              value={driverMessage}
-              onChange={(e) => setDriverMessage(e.target.value)}
-              className="w-full text-xs p-2.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#20B9BE]"
-            />
-          </div>
-
-          {/* Checkbox Options */}
-          <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-6 text-xs">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={autoVoucher}
-                onChange={(e) => setAutoVoucher(e.target.checked)}
-                className="w-4 h-4 text-[#20B9BE] rounded border-slate-300 focus:ring-[#20B9BE]"
-              />
-              <span className="font-semibold text-slate-700">
-                Tự động giải ngân Voucher 50.000đ vào ví tài xế
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={reportVGreen}
-                onChange={(e) => setReportVGreen(e.target.checked)}
-                className="w-4 h-4 text-[#20B9BE] rounded border-slate-300 focus:ring-[#20B9BE]"
-              />
-              <span className="font-semibold text-slate-700">
-                Gửi báo cáo lỗi sang Kỹ thuật trạm V-GREEN
-              </span>
-            </label>
           </div>
         </div>
       </div>
 
-      {/* Sticky Bottom Actions Bar */}
-      <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+      {/* Tabs navigation */}
+      <div className="px-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2 text-xs">
         <button
-          id="btn-save-progress"
-          onClick={handleSaveProgress}
-          className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold border border-slate-200 transition-colors shadow-2xs active:scale-98"
+          onClick={() => setActiveTab('explanation')}
+          className={`py-2.5 px-3 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'explanation'
+              ? 'border-[#20B9BE] text-[#008284]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
         >
-          <Save className="w-3.5 h-3.5 text-slate-500" />
-          <span>Lưu tiến độ & Tiếp tục theo dõi</span>
+          <FileText className="w-3.5 h-3.5" />
+          Biên Bản Giải Trình Từ Tài Xế
+          {ticket.explanation && (
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          )}
         </button>
-
         <button
-          id="btn-complete-close-ticket"
-          onClick={handleCompleteAndClose}
-          className="flex items-center gap-1.5 px-5 py-2 bg-[#20B9BE] hover:bg-[#1ca5a9] text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-98"
+          onClick={() => setActiveTab('evidence')}
+          className={`py-2.5 px-3 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'evidence'
+              ? 'border-[#20B9BE] text-[#008284]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
         >
-          <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-          <span>Hoàn tất & Đóng Ticket</span>
+          <Zap className="w-3.5 h-3.5" />
+          Dữ Liệu & Bằng Chứng Hệ Thống (Telematics)
+        </button>
+        <button
+          onClick={() => setActiveTab('driver_history')}
+          className={`py-2.5 px-3 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'driver_history'
+              ? 'border-[#20B9BE] text-[#008284]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          Lịch Sử & Tiền Lệ Vi Phạm ({ticket.driver.priorViolationsCount})
         </button>
       </div>
+
+      {/* Tab Content Workspace */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+        {/* TAB 1: DRIVER EXPLANATION */}
+        {activeTab === 'explanation' && (
+          <div className="space-y-4">
+            {ticket.explanation ? (
+              <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[11px] flex items-center gap-1">
+                      <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
+                      Đã nộp biên bản qua GSM Driver
+                    </span>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-slate-600 font-medium">
+                      Nhóm lý do: <strong>{ticket.explanation.reasonCategory}</strong>
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Nộp lúc: {ticket.explanation.submittedAt}
+                  </span>
+                </div>
+
+                {/* Content Statement */}
+                <div>
+                  <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Lời Khai / Bản Giải Trình Tự Bào Chữa Của Tài Xế:
+                  </h4>
+                  <div className="bg-white p-3.5 rounded-lg border border-slate-200 text-slate-800 leading-relaxed text-xs font-sans shadow-2xs">
+                    "{ticket.explanation.content}"
+                  </div>
+                </div>
+
+                {/* Attachments */}
+                {ticket.explanation.attachments && ticket.explanation.attachments.length > 0 && (
+                  <div>
+                    <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                      Bằng Chứng Tài Liệu & Ảnh Chụp Đính Kèm ({ticket.explanation.attachments.length}):
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {ticket.explanation.attachments.map((att) => (
+                        <div
+                          key={att.id}
+                          className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg hover:border-[#20B9BE] transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-[#20B9BE]" />
+                            <div>
+                              <div className="font-semibold text-slate-900 truncate max-w-[180px]">{att.name}</div>
+                              <div className="text-[10px] text-slate-400">{att.sizeText || 'Ảnh đính kèm'}</div>
+                            </div>
+                          </div>
+                          <a
+                            href={att.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Xem
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl space-y-2">
+                <AlertCircle className="w-8 h-8 text-amber-500 mx-auto" />
+                <h4 className="text-xs font-bold text-slate-800">Tài xế chưa nộp biên bản giải trình</h4>
+                <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                  Hệ thống đã gửi thông báo yêu cầu giải trình tới ứng dụng GSM Driver của tài xế. Thời hạn phản hồi còn {ticket.deadlineHours} giờ.
+                </p>
+                <button
+                  onClick={() => handleOpenDecisionModal('yeu_cau_bo_sung')}
+                  className="mt-2 px-3 py-1.5 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg font-semibold text-xs cursor-pointer"
+                >
+                  Gửi nhắc nhở hạn chót
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: SYSTEM EVIDENCE & TELEMATICS */}
+        {activeTab === 'evidence' && (
+          <div className="space-y-3.5">
+            {/* Anomaly Highlight Box */}
+            <div className="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl">
+              <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs mb-1">
+                <AlertTriangle className="w-4 h-4" />
+                Dấu Hiệu Gian Lận AI Telematics Phát Hiện:
+              </div>
+              <p className="text-slate-800 text-xs leading-relaxed font-medium mb-2">
+                {ticket.evidence.anomalyTitle}
+              </p>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
+                {ticket.evidence.anomalyDescription}
+              </p>
+            </div>
+
+            {/* Trip Details & Metric comparison */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Cước cuốc xe</span>
+                <div className="text-sm font-black text-slate-900 mt-0.5">
+                  {ticket.evidence.fareAmount.toLocaleString('vi-VN')} đ
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Tiền thưởng chuyến</span>
+                <div className="text-sm font-black text-rose-600 mt-0.5">
+                  {ticket.evidence.bonusClaimed.toLocaleString('vi-VN')} đ
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Quãng đường App</span>
+                <div className="text-sm font-black text-slate-900 mt-0.5">
+                  {ticket.evidence.gpsDistanceKm} km
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Thực tế xe chạy (T-Box)</span>
+                <div className="text-sm font-black text-rose-700 mt-0.5">
+                  {ticket.evidence.telematicsActualKm} km
+                </div>
+              </div>
+            </div>
+
+            {/* Pickup / Dropoff */}
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80 space-y-1.5 text-xs">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <span>Điểm đón: <strong>{ticket.evidence.pickup}</strong></span>
+              </div>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                <span>Điểm trả: <strong>{ticket.evidence.dropoff}</strong></span>
+              </div>
+            </div>
+
+            {/* Telematics Event Log */}
+            {ticket.evidence.telematicsLogs && ticket.evidence.telematicsLogs.length > 0 && (
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Nhật Ký Tín Hiệu Hộp Đen Xe VinFast:
+                </h4>
+                <div className="space-y-1.5">
+                  {ticket.evidence.telematicsLogs.map((log) => (
+                    <div key={log.id} className="p-2 bg-white border border-slate-200 rounded-lg flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-slate-400 text-[10px]">{log.time}</span>
+                        <span className="font-bold text-slate-800">{log.event}:</span>
+                        <span className="text-slate-600">{log.detail}</span>
+                      </div>
+                      <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                        log.severity === 'high' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {log.severity.toUpperCase()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: DRIVER COMPLIANCE HISTORY */}
+        {activeTab === 'driver_history' && (
+          <div className="space-y-3">
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-slate-900 text-xs">Hồ Sơ Lý Lịch Tuân Thủ (Dữ Liệu Theo CCCD)</h4>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  Số CCCD: <strong>{ticket.driver.cccd}</strong> • Tổng chuyến: {ticket.driver.completedRides}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-xs text-slate-500">Tiền lệ vi phạm: </span>
+                <strong className={ticket.driver.priorViolationsCount > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                  {ticket.driver.priorViolationsCount} lần
+                </strong>
+              </div>
+            </div>
+
+            <div className="text-slate-600 text-xs leading-relaxed p-2">
+              {ticket.driver.priorViolationsCount === 0 ? (
+                <div className="text-emerald-700 font-medium flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4" />
+                  Tài xế này chưa từng có tiền lệ bị lập biên bản gian lận trước đây. Đây là lần đầu phát sinh nghi vấn.
+                </div>
+              ) : (
+                <div className="text-amber-800 font-medium flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  Tài xế đã có {ticket.driver.priorViolationsCount} lần bị lập biên bản kiểm soát. Cần cân nhắc khung xử phạt tăng nặng nếu tiếp tục tái phạm.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* DECISION SUMMARY BANNER (If already decided) */}
+        {ticket.decision && (
+          <div className={`p-4 rounded-xl border space-y-2 mt-4 ${
+            ticket.decision.decisionType === 'tha_loi'
+              ? 'bg-emerald-50/80 border-emerald-300'
+              : 'bg-rose-50/80 border-rose-300'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {ticket.decision.decisionType === 'tha_loi' ? (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                ) : (
+                  <Gavel className="w-5 h-5 text-rose-600" />
+                )}
+                <h4 className="text-xs font-black uppercase tracking-wide">
+                  {ticket.decision.decisionType === 'tha_loi'
+                    ? 'PHÁN QUYẾT: THA LỖI & MIỄN XỬ PHẠT'
+                    : `PHÁN QUYẾT: XỬ PHẠT VI PHẠM GIAN LẬN`}
+                </h4>
+              </div>
+              <span className="text-[10px] text-slate-500 font-mono">
+                Ban hành: {ticket.decision.decidedAt} bởi {ticket.decision.officerName}
+              </span>
+            </div>
+
+            <div className="text-xs text-slate-800 leading-relaxed font-sans">
+              <strong>Căn cứ:</strong> {ticket.decision.reason}
+            </div>
+
+            {ticket.decision.fineAmount !== undefined && ticket.decision.fineAmount > 0 && (
+              <div className="text-xs text-rose-700 font-bold">
+                • Mức phạt tiền / Truy thu: {ticket.decision.fineAmount.toLocaleString('vi-VN')} VNĐ (Khấu trừ ví)
+              </div>
+            )}
+
+            {ticket.decision.suspensionDays !== undefined && ticket.decision.suspensionDays > 0 && (
+              <div className="text-xs text-rose-700 font-bold">
+                • Thời hạn đình chỉ tài khoản: {ticket.decision.suspensionDays === 999 ? 'Khóa vĩnh viễn' : `${ticket.decision.suspensionDays} ngày`}
+              </div>
+            )}
+
+            <div className="text-[11px] text-slate-600 bg-white/70 p-2 rounded-lg border border-slate-200/60 mt-1">
+              <strong>Đã gửi về app tài xế:</strong> "{ticket.decision.messageToDriver}"
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Adjudication Action Bar */}
+      <div className="p-3.5 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+        <div className="text-xs text-slate-500">
+          Quyền hạn: <strong>Ban Kiểm Soát Tuân Thủ GSM</strong>
+        </div>
+
+        {/* 4 Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* 1. Tha lỗi / Minh oan */}
+          <button
+            onClick={() => handleOpenDecisionModal('tha_loi')}
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Tha Lỗi / Minh Oan
+          </button>
+
+          {/* 2. Cảnh cáo nhắc nhở */}
+          <button
+            onClick={() => handleOpenDecisionModal('canh_cao')}
+            className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Cảnh Cáo
+          </button>
+
+          {/* 3. Yêu cầu bổ sung */}
+          <button
+            onClick={() => handleOpenDecisionModal('yeu_cau_bo_sung')}
+            className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5 text-sky-600" />
+            Yêu Cầu Thêm Bằng Chứng
+          </button>
+
+          {/* 4. Ra quyết định xử phạt */}
+          <button
+            onClick={() => handleOpenDecisionModal('xu_phat_tien')}
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+          >
+            <Gavel className="w-4 h-4" />
+            Ra Quyết Định Xử Phạt
+          </button>
+        </div>
+      </div>
+
+      {/* Adjudication Modal */}
+      <AdjudicationModal
+        isOpen={adjudicationModal.isOpen}
+        onClose={() => setAdjudicationModal({ ...adjudicationModal, isOpen: false })}
+        caseItem={ticket}
+        initialType={adjudicationModal.type}
+        onSubmitDecision={handleApplyDecision}
+      />
     </div>
   );
 };
