@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Circular portrait backdrop -->
+  <circle cx="50" cy="50" r="50" fill="#E3F8F8"/>
+  <circle cx="50" cy="50" r="48" stroke="#20B9BE" stroke-width="2"/>
+  
+  <!-- Operator silhouette with headset and teal uniform -->
+  <!-- Shoulders & Teal Polo Collar -->
+  <path d="M18 95 C22 76 35 70 50 70 C65 70 78 76 82 95 Z" fill="#209799"/>
+  <path d="M42 70 L50 82 L58 70 Z" fill="#187274"/>
+  <path d="M50 63 L46 72 L54 72 Z" fill="#F8C5A8"/>
+
+  <!-- Neck & Face -->
+  <rect x="44" y="55" width="12" height="12" rx="4" fill="#F8C5A8"/>
+  <path d="M30 40 C30 25 70 25 70 40 C70 54 60 62 50 62 C40 62 30 54 30 40 Z" fill="#FADAC7"/>
+  
+  <!-- Hair (Sleek professional dark hair) -->
+  <path d="M26 38 C26 20 40 16 50 16 C63 16 74 20 74 38 C74 46 72 56 68 58 C68 46 66 30 50 30 C34 30 32 46 32 58 C28 56 26 46 26 38 Z" fill="#1E293B"/>
+  <path d="M28 35 C32 20 45 22 50 25 C55 22 68 20 72 35 C68 28 58 28 50 31 C42 28 32 28 28 35 Z" fill="#0F172A"/>
+
+  <!-- Eyes & Eyebrows -->
+  <ellipse cx="42" cy="41" rx="2.5" ry="1.5" fill="#1E293B"/>
+  <ellipse cx="58" cy="41" rx="2.5" ry="1.5" fill="#1E293B"/>
+  <path d="M38 37 Q42 35 46 37" stroke="#1E293B" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <path d="M54 37 Q58 35 62 37" stroke="#1E293B" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Friendly Smile -->
+  <path d="M44 50 Q50 55 56 50" stroke="#E11D48" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+  <!-- Headset -->
+  <path d="M27 34 C24 20 76 20 73 34" stroke="#475569" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <rect x="71" y="34" width="5" height="12" rx="2.5" fill="#334155"/>
+  <rect x="24" y="34" width="5" height="12" rx="2.5" fill="#334155"/>
+  <path d="M26 42 Q28 56 42 54" stroke="#475569" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <circle cx="43" cy="54" r="2.5" fill="#0F172A"/>
+</svg>

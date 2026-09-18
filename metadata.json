@@ -1,0 +1,6 @@
+{
+  "name": "Green SM Operations Portal",
+  "description": "Cổng điều phối vận hành và xử lý sự cố đội xe điện Green SM (GSM Operations Portal)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
