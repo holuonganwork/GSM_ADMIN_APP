@@ -15,20 +15,24 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+import { ShiftMetrics } from '../types';
+
 export type NavTab = 'tickets' | 'driver_chat' | 'fleet_map' | 'driver_management' | 'sla_reports';
 
 interface SidebarProps {
   currentTab: NavTab;
   onTabChange: (tab: NavTab) => void;
-  ticketCount: number;
-  chatCount: number;
+  ticketCount?: number;
+  chatCount?: number;
+  metrics?: ShiftMetrics;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onTabChange,
-  ticketCount = 42,
-  chatCount = 7,
+  ticketCount = 0,
+  chatCount = 0,
+  metrics,
 }) => {
   const navItems = [
     {
@@ -119,27 +123,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </div>
             <span className="text-xs font-extrabold text-[#008284] bg-[#20B9BE]/10 px-1.5 py-0.5 rounded">
-              98.2% SLA
+              {metrics?.shiftSlaPercent ? `${metrics.shiftSlaPercent}% SLA` : '100% SLA'}
             </span>
           </div>
 
           {/* Progress Bar */}
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-2.5">
-            <div className="bg-[#20B9BE] h-full rounded-full w-[98.2%]"></div>
+            <div 
+              className="bg-[#20B9BE] h-full rounded-full transition-all duration-500" 
+              style={{ width: `${Math.min(100, Math.max(0, metrics?.shiftSlaPercent ?? 100))}%` }}
+            ></div>
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-600 font-medium">
-            <span>Đã xử lý: <strong className="text-slate-900 font-bold">34</strong></span>
-            <span>Tồn đọng: <strong className="text-amber-600 font-bold">2</strong></span>
+            <span>Đã xử lý: <strong className="text-slate-900 font-bold">{metrics?.shiftProcessed ?? 0}</strong></span>
+            <span>Tồn đọng: <strong className="text-amber-600 font-bold">{metrics?.shiftBacklog ?? 0}</strong></span>
           </div>
         </div>
 
         {/* Fleet telemetry quick indicator */}
         <div className="mt-2.5 px-2 flex items-center justify-between text-[10px] text-slate-500 font-medium">
           <span className="flex items-center gap-1">
-            <Zap className="w-3 h-3 text-[#20B9BE]" /> Đội xe VinFast Online
+            <Zap className="w-3 h-3 text-[#20B9BE]" /> Đội xe VinFast Telematics
           </span>
-          <span className="text-emerald-600 font-bold">1,842 xe</span>
+          <span className="text-emerald-600 font-bold">
+            {metrics?.inProgressTickets !== undefined ? `${metrics.inProgressTickets} đang hỗ trợ` : 'Trực tuyến'}
+          </span>
         </div>
       </div>
     </aside>

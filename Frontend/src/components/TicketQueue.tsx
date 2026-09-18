@@ -11,12 +11,14 @@ interface TicketQueueProps {
   tickets: Ticket[];
   selectedTicketId: string;
   onSelectTicket: (ticket: Ticket) => void;
+  isLoading?: boolean;
 }
 
 export const TicketQueue: React.FC<TicketQueueProps> = ({
   tickets,
   selectedTicketId,
   onSelectTicket,
+  isLoading = false,
 }) => {
   // Format seconds into MM:SS or -MM:SS
   const formatSla = (seconds: number) => {
@@ -66,7 +68,7 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
       <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
         <div>
           <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-            HÀNG CHỜ CẦN XỬ LÝ (5 ƯU TIÊN CAO NHẤT)
+            HÀNG CHỜ CẦN XỬ LÝ ({tickets.length})
           </h3>
           <p className="text-[10px] text-slate-400 mt-0.5">
             Ưu tiên tự động bằng thuật toán GSM Dispatch SLA
@@ -80,9 +82,28 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
 
       {/* Ticket List Cards matching Image 4 */}
       <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 divide-y divide-slate-100/50">
-        {tickets.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-xs">
-            Không tìm thấy ticket phù hợp với bộ lọc hiện tại.
+        {isLoading ? (
+          <div className="space-y-3 p-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-3 rounded-xl border border-slate-200/60 bg-slate-50/50 animate-pulse space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="h-4 w-16 bg-slate-200 rounded"></div>
+                  <div className="h-3 w-20 bg-slate-200 rounded"></div>
+                </div>
+                <div className="h-4 w-full bg-slate-200 rounded"></div>
+                <div className="h-3 w-3/4 bg-slate-100 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="py-16 px-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+              <CheckCircle2 className="w-6 h-6 text-[#20B9BE]" />
+            </div>
+            <h4 className="text-xs font-bold text-slate-800">Không có ticket nào trong hàng đợi</h4>
+            <p className="text-[11px] text-slate-400 mt-1 max-w-[260px] mx-auto leading-relaxed">
+              Tất cả sự cố đã được điều phối xử lý xong hoặc không tìm thấy dữ liệu phù hợp với bộ lọc.
+            </p>
           </div>
         ) : (
           tickets.map((ticket) => {

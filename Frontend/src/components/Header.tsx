@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GreenSMLogo } from './GreenSMLogo';
 import { 
   Search, 
@@ -17,46 +17,42 @@ import {
   Settings,
   Coffee
 } from 'lucide-react';
+import { AppNotification, OperatorProfile, defaultOperatorProfile } from '../types';
 
 interface HeaderProps {
   onSearchChange: (query: string) => void;
   searchQuery: string;
   onOpenSOS: () => void;
-  onOpenNotifications: () => void;
+  onOpenNotifications?: () => void;
+  operatorProfile?: OperatorProfile;
+  notifications?: AppNotification[];
+  onUpdateOperatorStatus?: (status: 'online' | 'break' | 'busy') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   searchQuery,
   onOpenSOS,
+  onOpenNotifications,
+  operatorProfile = defaultOperatorProfile,
+  notifications = [],
+  onUpdateOperatorStatus,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [operatorStatus, setOperatorStatus] = useState<'online' | 'break' | 'busy'>('online');
+  const [operatorStatus, setOperatorStatus] = useState<'online' | 'break' | 'busy'>(operatorProfile.status);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Cảnh báo pin xe khẩn cấp < 10%',
-      desc: 'Xe VF e34 (29E-521.84) báo lỗi sạc tại Times City',
-      time: '2 phút trước',
-      type: 'danger',
-    },
-    {
-      id: 2,
-      title: 'Khách VIP Platinum cần hỗ trợ',
-      desc: 'Yêu cầu hoàn trả vali tài liệu tại Ga T1 Nội Bài',
-      time: '12 phút trước',
-      type: 'warning',
-    },
-    {
-      id: 3,
-      title: 'Đội cơ động đã nhận điều phối',
-      desc: 'Xe cứu trợ CĐ-03 đang di chuyển đến ngã tư Khuất Duy Tiến',
-      time: '15 phút trước',
-      type: 'info',
-    },
-  ];
+  useEffect(() => {
+    if (operatorProfile?.status) {
+      setOperatorStatus(operatorProfile.status);
+    }
+  }, [operatorProfile?.status]);
+
+  const handleStatusChange = (status: 'online' | 'break' | 'busy') => {
+    setOperatorStatus(status);
+    setShowProfileMenu(false);
+    onUpdateOperatorStatus?.(status);
+  };
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -119,31 +115,45 @@ export const Header: React.FC<HeaderProps> = ({
             title="Thông báo sự cố"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
+            {notifications.length > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
+            )}
           </button>
 
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="px-3.5 py-2 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">Cảnh báo ca trực (3)</span>
-                <span className="text-[11px] text-[#20B9BE] font-medium cursor-pointer hover:underline">Đánh dấu đã đọc</span>
+                <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                  Cảnh báo ca trực ({notifications.length})
+                </span>
+                {notifications.length > 0 && (
+                  <span className="text-[11px] text-[#20B9BE] font-medium cursor-pointer hover:underline">
+                    Đánh dấu đã đọc
+                  </span>
+                )}
               </div>
               <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
-                {notifications.map((n) => (
-                  <div key={n.id} className="p-3 hover:bg-slate-50 transition-colors cursor-pointer">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${
-                          n.type === 'danger' ? 'bg-rose-500' :
-                          n.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                        }`} />
-                        <h4 className="text-xs font-semibold text-slate-800">{n.title}</h4>
-                      </div>
-                      <span className="text-[10px] text-slate-400 shrink-0">{n.time}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 mt-1 pl-3.5 leading-relaxed">{n.desc}</p>
+                {notifications.length === 0 ? (
+                  <div className="py-6 text-center text-slate-400 text-xs px-4">
+                    Không có cảnh báo mới trong ca trực.
                   </div>
-                ))}
+                ) : (
+                  notifications.map((n) => (
+                    <div key={n.id} className="p-3 hover:bg-slate-50 transition-colors cursor-pointer">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${
+                            n.type === 'danger' ? 'bg-rose-500' :
+                            n.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+                          }`} />
+                          <h4 className="text-xs font-semibold text-slate-800">{n.title}</h4>
+                        </div>
+                        <span className="text-[10px] text-slate-400 shrink-0">{n.time}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-1 pl-3.5 leading-relaxed">{n.desc}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -158,19 +168,22 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="relative">
               <img
-                src="/avatar-chi.svg"
-                alt="Nguyễn Mai Chi"
+                src={operatorProfile.avatarUrl || '/avatar-chi.svg'}
+                alt={operatorProfile.name}
                 className="w-8 h-8 rounded-full object-cover border border-[#20B9BE]/40 shadow-xs"
                 referrerPolicy="no-referrer"
               />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+              <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-full ${
+                operatorStatus === 'online' ? 'bg-emerald-500' :
+                operatorStatus === 'break' ? 'bg-amber-500' : 'bg-rose-500'
+              }`}></span>
             </div>
             <div className="text-left hidden md:block">
               <div className="text-xs font-bold text-slate-900 leading-tight">
-                Nguyễn Mai Chi
+                {operatorProfile.name}
               </div>
               <div className="text-[10px] text-slate-500 font-medium leading-none mt-0.5">
-                Điều phối viên Đội 1
+                {operatorProfile.code} • {operatorProfile.shift}
               </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -180,14 +193,15 @@ export const Header: React.FC<HeaderProps> = ({
           {showProfileMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="px-3.5 py-2 border-b border-slate-100">
-                <p className="text-xs font-bold text-slate-900">Nguyễn Mai Chi (GSM-889)</p>
-                <p className="text-[11px] text-slate-500">Khu vực: Hà Nội & Vùng lân cận</p>
+                <p className="text-xs font-bold text-slate-900">{operatorProfile.name} ({operatorProfile.code})</p>
+                <p className="text-[11px] text-slate-500">{operatorProfile.role}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Thời gian: {operatorProfile.shiftTime}</p>
               </div>
 
               <div className="p-1.5">
                 <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 py-1">Trạng thái ca trực</div>
                 <button
-                  onClick={() => { setOperatorStatus('online'); setShowProfileMenu(false); }}
+                  onClick={() => handleStatusChange('online')}
                   className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg"
                 >
                   <span className="flex items-center gap-2">
@@ -197,7 +211,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {operatorStatus === 'online' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                 </button>
                 <button
-                  onClick={() => { setOperatorStatus('break'); setShowProfileMenu(false); }}
+                  onClick={() => handleStatusChange('break')}
                   className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-lg"
                 >
                   <span className="flex items-center gap-2">

@@ -5,26 +5,28 @@
 
 import React from 'react';
 import { X, Download, FileSpreadsheet, CheckCircle2, Clock } from 'lucide-react';
-import { ShiftMetrics } from '../../types';
+import { ShiftMetrics, OperatorProfile, defaultOperatorProfile } from '../../types';
 
 interface ExportShiftModalProps {
   isOpen: boolean;
   onClose: () => void;
   metrics: ShiftMetrics;
+  operatorProfile?: OperatorProfile;
 }
 
 export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
   isOpen,
   onClose,
   metrics,
+  operatorProfile = defaultOperatorProfile,
 }) => {
   if (!isOpen) return null;
 
   const handleDownloadCSV = () => {
     const csvContent = [
       ['Thong So', 'Gia Tri'],
-      ['Ca truc', 'Sang 07:00 - 15:00'],
-      ['Dieu phoi vien', 'Nguyen Mai Chi (GSM-889)'],
+      ['Ca truc', `${operatorProfile.shift} (${operatorProfile.shiftTime})`],
+      ['Dieu phoi vien', `${operatorProfile.name} (${operatorProfile.code})`],
       ['Tong ticket trong ca', metrics.totalTickets],
       ['Da dong', metrics.closedTickets],
       ['Dang xu ly', metrics.inProgressTickets],
@@ -57,7 +59,7 @@ export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Báo Cáo Bàn Giao Ca Trực GSM</h3>
-              <p className="text-[11px] text-slate-500">Ca sáng: 07:00 - 15:00 | Đội 1</p>
+              <p className="text-[11px] text-slate-500">{operatorProfile.shift}: {operatorProfile.shiftTime} | {operatorProfile.name}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700 rounded-lg">

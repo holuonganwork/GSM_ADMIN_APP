@@ -68,20 +68,31 @@ export const KPICards: React.FC<KPICardsProps> = ({ metrics, onFilterEmergency }
         </div>
 
         <div className="flex items-center justify-between mb-2">
-          <span className="text-2xl font-black text-rose-600 tracking-tight">
-            0{metrics.emergencyP1Count}
+          <span className={`text-2xl font-black tracking-tight ${metrics.emergencyP1Count > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+            {metrics.emergencyP1Count < 10 ? `0${metrics.emergencyP1Count}` : metrics.emergencyP1Count}
           </span>
-          <span className="px-2 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full shadow-2xs group-hover:bg-rose-700 transition-colors">
-            Can thiệp ngay
-          </span>
+          {metrics.emergencyP1Count > 0 ? (
+            <span className="px-2 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full shadow-2xs group-hover:bg-rose-700 transition-colors">
+              Can thiệp ngay
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold rounded-full">
+              Kiểm soát tốt
+            </span>
+          )}
         </div>
 
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600 font-medium">
-          <span>2 sạc pin &lt;10%</span>
-          <span className="text-slate-300">•</span>
-          <span>1 va chạm</span>
-          <span className="text-slate-300">•</span>
-          <span>1 thất lạc VIP</span>
+        <div className="pt-2 border-t border-slate-100 flex items-center text-[11px] text-slate-600 font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+          {metrics.emergencySubText && metrics.emergencySubText.length > 0 ? (
+            metrics.emergencySubText.map((item, idx) => (
+              <React.Fragment key={idx}>
+                {idx > 0 && <span className="text-slate-300 mx-1.5">•</span>}
+                <span>{item}</span>
+              </React.Fragment>
+            ))
+          ) : (
+            <span className="text-slate-400">Không có sự cố khẩn cấp tồn đọng</span>
+          )}
         </div>
       </div>
 

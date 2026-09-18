@@ -1,11 +1,13 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * SEED FIXTURES (Chỉ sử dụng làm dữ liệu mẫu thử nghiệm hoặc nạp seed vào database backend)
  */
 
 import { Ticket, ShiftMetrics } from '../types';
 
-export const initialShiftMetrics: ShiftMetrics = {
+export const seedShiftMetrics: ShiftMetrics = {
   totalTickets: 142,
   trendPercentage: 8.4,
   closedTickets: 92,
@@ -24,7 +26,7 @@ export const initialShiftMetrics: ShiftMetrics = {
   shiftBacklog: 2,
 };
 
-export const mockTicketsData: Ticket[] = [
+export const seedTicketsData: Ticket[] = [
   {
     id: 'TK-8842',
     priority: 'P1',
@@ -353,3 +355,7 @@ export const mockTicketsData: Ticket[] = [
     },
   },
 ];
+
+// Backwards-compatible aliases
+export const initialShiftMetrics = seedShiftMetrics;
+export const mockTicketsData = seedTicketsData;
