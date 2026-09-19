@@ -18,7 +18,8 @@ import {
   FileText,
   Eye,
   X,
-  Coins
+  Coins,
+  Clock
 } from 'lucide-react';
 import { FraudCase } from '../../types';
 
@@ -39,13 +40,13 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
   selectedSeverity = 'all',
   onCallDriver,
 }) => {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'da_tha_loi' | 'da_xu_phat' | 'da_canh_cao'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'da_tha_loi' | 'da_xu_phat' | 'da_canh_cao' | 'yeu_cau_bo_sung'>('all');
   const [selectedHistoryCase, setSelectedHistoryCase] = useState<FraudCase | null>(null);
 
   // Filter cases
   const filteredCases = cases.filter((c) => {
-    // Only processed cases
-    const isProcessed = c.status === 'da_tha_loi' || c.status === 'da_xu_phat' || c.status === 'da_canh_cao';
+    // Only processed cases (including supplementary request logged)
+    const isProcessed = c.status === 'da_tha_loi' || c.status === 'da_xu_phat' || c.status === 'da_canh_cao' || c.status === 'yeu_cau_bo_sung';
     if (!isProcessed) return false;
 
     // Status filter
@@ -84,6 +85,14 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
   });
 
   const getDecisionBadge = (c: FraudCase) => {
+    if (c.status === 'yeu_cau_bo_sung' || c.decision?.decisionType === 'yeu_cau_bo_sung') {
+      return {
+        label: 'Yêu cầu bổ sung chứng cứ',
+        badgeClass: 'bg-sky-50 text-sky-800 border-sky-300',
+        icon: Clock,
+        iconColor: 'text-sky-600',
+      };
+    }
     if (c.status === 'da_tha_loi' || c.decision?.decisionType === 'tha_loi') {
       return {
         label: 'Đã tha lỗi / Minh oan',
@@ -111,6 +120,7 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
   const exoneratedCount = cases.filter((c) => c.status === 'da_tha_loi').length;
   const penalizedCount = cases.filter((c) => c.status === 'da_xu_phat').length;
   const warnedCount = cases.filter((c) => c.status === 'da_canh_cao').length;
+  const supplementaryCount = cases.filter((c) => c.status === 'yeu_cau_bo_sung').length;
 
   return (
     <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col p-4 space-y-3.5">
@@ -122,7 +132,7 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
             Lịch Sử Phán Quyết & Hồ Sơ Đã Xử Lý ({cases.length} hồ sơ)
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Xem lại toàn bộ hồ sơ vi phạm đã hoàn tất thẩm định, quyết định chế tài và biên bản giải trình
+            Xem lại toàn bộ hồ sơ vi phạm đã hoàn tất thẩm định, quyết định chế tài và yêu cầu bổ sung
           </p>
         </div>
 
@@ -139,16 +149,6 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
             Tất cả ({cases.length})
           </button>
           <button
-            onClick={() => setStatusFilter('da_tha_loi')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              statusFilter === 'da_tha_loi'
-                ? 'bg-white text-emerald-700 font-bold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Đã tha lỗi ({exoneratedCount})
-          </button>
-          <button
             onClick={() => setStatusFilter('da_xu_phat')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               statusFilter === 'da_xu_phat'
@@ -157,6 +157,16 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
             }`}
           >
             Đã xử phạt ({penalizedCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter('da_tha_loi')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              statusFilter === 'da_tha_loi'
+                ? 'bg-white text-emerald-700 font-bold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Đã tha lỗi ({exoneratedCount})
           </button>
           {warnedCount > 0 && (
             <button
@@ -168,6 +178,18 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
               }`}
             >
               Cảnh cáo ({warnedCount})
+            </button>
+          )}
+          {supplementaryCount > 0 && (
+            <button
+              onClick={() => setStatusFilter('yeu_cau_bo_sung')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                statusFilter === 'yeu_cau_bo_sung'
+                  ? 'bg-white text-sky-700 font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Yêu cầu bổ sung ({supplementaryCount})
             </button>
           )}
         </div>
@@ -267,7 +289,12 @@ export const CaseHistoryView: React.FC<CaseHistoryViewProps> = ({
                         <span>Cán bộ thẩm định: <strong className="text-slate-800">{c.decision?.officerName || 'Nguyễn Mai Chi'}</strong></span>
                         <span className="font-mono">{c.decision?.decidedAt || c.createdAt}</span>
                       </div>
-                      {c.decision?.fineAmount ? (
+                      {c.status === 'yeu_cau_bo_sung' ? (
+                        <div className="font-bold text-sky-700 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-sky-600" />
+                          Đã ghi nhận yêu cầu tài xế bổ sung chứng cứ (24h)
+                        </div>
+                      ) : c.decision?.fineAmount ? (
                         <div className="font-bold text-rose-700 flex items-center gap-1.5">
                           <Coins className="w-3.5 h-3.5 text-rose-600" />
                           Tiền phạt khấu trừ: {c.decision.fineAmount.toLocaleString('vi-VN')} VNĐ

@@ -10,7 +10,7 @@ import { FraudCase, ComplianceMetrics } from '../types';
 
 export const seedComplianceMetrics: ComplianceMetrics = {
   totalCases: 28,
-  pendingReview: 6,
+  pendingReview: 4,
   exoneratedCount: 11,
   penalizedCount: 9,
   totalFinesRecovered: 18500000,
@@ -272,9 +272,24 @@ export const seedFraudCases: FraudCase[] = [
         { id: 'l9', time: '22:00', event: 'Cắm lại giắc viễn thông', detail: 'Pin xe hao hụt 53% SoC', severity: 'high' },
       ],
     },
-    explanation: undefined, // Chưa nộp giải trình
-    status: 'cho_tai_xe_giai_trinh',
-    statusLabel: 'Chờ tài xế giải trình (còn 2h)',
+    explanation: {
+      explanationId: 'EXP-4405',
+      submittedAt: '23:00 (17/09/2026)',
+      reasonCategory: 'Sự cố thiết bị',
+      content: 'Xe tôi bị lỏng giắc cắm OBD do nhân viên rửa xe gạt phải, tôi không cố ý ngắt kết nối.',
+      attachments: [],
+      status: 'yeu_cau_bo_sung',
+    },
+    status: 'yeu_cau_bo_sung',
+    statusLabel: 'Yêu cầu bổ sung chứng cứ',
+    decision: {
+      decisionType: 'yeu_cau_bo_sung',
+      decidedAt: '08:00 (18/09/2026)',
+      officerName: 'Nguyễn Mai Chi',
+      officerCode: 'GSM-INSPECT-88',
+      reason: 'Yêu cầu tài xế mang xe đến Xưởng dịch vụ VinFast kiểm tra giắc cắm T-Box và bổ sung biên bản kỹ thuật trong vòng 24h.',
+      messageToDriver: 'Ban Kiểm soát yêu cầu bạn mang xe đến Xưởng dịch vụ VinFast gần nhất để kiểm tra giắc T-Box và chụp ảnh biên bản xác nhận gửi lên app trong 24 giờ tới.',
+    },
   },
   {
     id: 'GL-8840',

@@ -7,13 +7,13 @@
 
 import React, { useState } from 'react';
 import { FraudCase, CaseStatus } from '../types';
-import { 
-  AlertTriangle, 
-  ArrowUpDown, 
-  CheckCircle2, 
-  ShieldAlert, 
-  Clock, 
-  IdCard, 
+import {
+  AlertTriangle,
+  ArrowUpDown,
+  CheckCircle2,
+  ShieldAlert,
+  Clock,
+  IdCard,
   Car,
   Download,
   RotateCw,
@@ -79,18 +79,6 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
   };
 
   const hasActiveFilters = selectedFraudType !== 'all' || selectedSeverity !== 'all';
-
-  const statusTabs = [
-    { id: 'all' as CaseStatus, label: 'Tất cả' },
-    {
-      id: 'da_nop_cho_duyet' as CaseStatus,
-      label: 'Chờ duyệt',
-      badge: pendingCount > 0 ? pendingCount : undefined,
-      badgeColor: 'bg-amber-500 text-white font-bold'
-    },
-    { id: 'cho_tai_xe_giai_trinh' as CaseStatus, label: 'Chờ nộp' },
-    { id: 'yeu_cau_bo_sung' as CaseStatus, label: 'Bổ sung' },
-  ];
 
   const getFraudBadge = (type: string) => {
     switch (type) {
@@ -168,35 +156,6 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
             )}
           </div>
         </div>
-
-        {/* Status Category Segmented Tabs */}
-        {onStatusTabChange && (
-          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-200/70 rounded-xl">
-            {statusTabs.map((tab) => {
-              const isActive = currentStatusTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  id={`filter-tab-${tab.id}`}
-                  data-testid={`filter-tab-${tab.id}`}
-                  onClick={() => onStatusTabChange(tab.id)}
-                  className={`flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-white text-[#006768] shadow-xs font-bold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
-                  }`}
-                >
-                  <span className="truncate">{tab.label}</span>
-                  {tab.badge !== undefined && (
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* Active Filter Chips (if any filter from Header is active) */}
         {hasActiveFilters && (
@@ -276,11 +235,10 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
                 id={`case-card-${caseItem.id}`}
                 data-testid={`case-card-${caseItem.id}`}
                 onClick={() => onSelectTicket(caseItem)}
-                className={`p-3.5 rounded-xl border transition-all cursor-pointer relative ${
-                  isSelected
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer relative ${isSelected
                     ? 'bg-[#E3F8F8]/40 border-[#20B9BE] shadow-xs ring-1 ring-[#20B9BE]/30'
                     : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/60'
-                }`}
+                  }`}
               >
                 {/* Active Indicator bar on left */}
                 {isSelected && (
@@ -308,13 +266,12 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
                     <div className="text-sm font-bold text-slate-900">
                       {caseItem.driver.name}
                     </div>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                      caseItem.driver.trustScore < 50 
-                        ? 'bg-rose-100 text-rose-700' 
-                        : caseItem.driver.trustScore < 75 
-                        ? 'bg-amber-100 text-amber-800' 
-                        : 'bg-emerald-100 text-emerald-700'
-                    }`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${caseItem.driver.trustScore < 50
+                        ? 'bg-rose-100 text-rose-700'
+                        : caseItem.driver.trustScore < 75
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-emerald-100 text-emerald-700'
+                      }`}>
                       Tín nhiệm: {caseItem.driver.trustScore}/100
                     </span>
                   </div>

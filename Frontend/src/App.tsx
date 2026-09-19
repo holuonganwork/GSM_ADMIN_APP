@@ -30,9 +30,12 @@ import { complianceApi, operatorApi, notificationApi } from './services/api';
 import { seedFraudCases, seedComplianceMetrics } from './data/mockTickets';
 import { CheckCircle2, ShieldAlert, RefreshCw, Sparkles, WifiOff, AlertTriangle } from 'lucide-react';
 
-// Helper to identify processed/decided cases
+// Helper to identify processed/decided/supplementary cases that belong to History
 const isCaseProcessed = (c: FraudCase) =>
-  c.status === 'da_tha_loi' || c.status === 'da_xu_phat' || c.status === 'da_canh_cao';
+  c.status === 'da_tha_loi' ||
+  c.status === 'da_xu_phat' ||
+  c.status === 'da_canh_cao' ||
+  c.status === 'yeu_cau_bo_sung';
 
 export default function App() {
   // Navigation & Layout
@@ -73,7 +76,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFraudType, setSelectedFraudType] = useState<string>('all');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
-  const [currentStatusTab, setCurrentStatusTab] = useState<CaseStatus>('all');
 
   // Modals
   const [callModal, setCallModal] = useState<{ isOpen: boolean; name: string; phone: string }>({
@@ -106,7 +108,7 @@ export default function App() {
 
       if (casesResult.status === 'fulfilled') {
         setCases(casesResult.value);
-        const pending = casesResult.value.filter((c: FraudCase) => !isCaseProcessed(c));
+        const pending = casesResult.value.filter((c: FraudCase) => c.status === 'da_nop_cho_duyet');
         if (pending.length > 0) {
           setSelectedCaseId(pending[0].id);
         } else if (casesResult.value.length > 0) {
@@ -152,7 +154,7 @@ export default function App() {
   const handleLoadDemoData = () => {
     setCases(seedFraudCases);
     setMetrics(seedComplianceMetrics);
-    const pending = seedFraudCases.filter((c) => !isCaseProcessed(c));
+    const pending = seedFraudCases.filter((c) => c.status === 'da_nop_cho_duyet');
     setSelectedCaseId(pending.length > 0 ? pending[0].id : null);
     setIsDemoMode(true);
     showToast('Đã nạp 7 hồ sơ gian lận & biên bản giải trình mẫu để thẩm định!');
@@ -167,8 +169,8 @@ export default function App() {
     showToast('Đã dọn sạch dữ liệu về trạng thái ban đầu.');
   };
 
-  // Partition cases into Pending vs History
-  const pendingCases = cases.filter((c) => !isCaseProcessed(c));
+  // Partition cases: Pending contains ONLY 'da_nop_cho_duyet'
+  const pendingCases = cases.filter((c) => c.status === 'da_nop_cho_duyet');
   const historyCases = cases.filter((c) => isCaseProcessed(c));
 
   // Filtered pending cases for the main desk
@@ -191,10 +193,6 @@ export default function App() {
       return false;
     }
 
-    if (currentStatusTab !== 'all' && c.status !== currentStatusTab) {
-      return false;
-    }
-
     return true;
   });
 
@@ -205,7 +203,7 @@ export default function App() {
   const handleUpdateCase = async (updatedCase: FraudCase) => {
     setCases((prev) => prev.map((c) => (c.id === updatedCase.id ? updatedCase : c)));
 
-    // If the case becomes processed, automatically pick the next pending case for the main desk
+    // If the case becomes processed or supplementary requested, automatically pick the next pending case for the main desk
     if (isCaseProcessed(updatedCase)) {
       const remainingPending = pendingCases.filter((c) => c.id !== updatedCase.id);
       if (remainingPending.length > 0) {
@@ -232,6 +230,8 @@ export default function App() {
       } else if (updatedCase.status === 'da_canh_cao') {
         pendingDelta = -1;
         penalizedDelta = 1;
+      } else if (updatedCase.status === 'yeu_cau_bo_sung') {
+        pendingDelta = -1;
       }
 
       return {
@@ -243,7 +243,11 @@ export default function App() {
       };
     });
 
-    showToast(`Đã lưu quyết định: ${updatedCase.statusLabel} cho hồ sơ #${updatedCase.id}`);
+    if (updatedCase.status === 'yeu_cau_bo_sung') {
+      showToast(`Đã chuyển hồ sơ #${updatedCase.id} sang Lịch Sử với yêu cầu bổ sung chứng cứ.`);
+    } else {
+      showToast(`Đã lưu quyết định: ${updatedCase.statusLabel} cho hồ sơ #${updatedCase.id}`);
+    }
 
     // Call Backend
     try {
@@ -357,8 +361,6 @@ export default function App() {
                 selectedTicketId={selectedCase?.id || ''}
                 onSelectTicket={(c) => setSelectedCaseId(c.id)}
                 isLoading={isLoading}
-                currentStatusTab={currentStatusTab}
-                onStatusTabChange={setCurrentStatusTab}
                 pendingCount={pendingCases.length}
                 selectedFraudType={selectedFraudType}
                 onFraudTypeChange={setSelectedFraudType}

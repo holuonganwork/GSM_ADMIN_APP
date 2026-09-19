@@ -325,22 +325,6 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           <div className="space-y-4 flex flex-col">
             {ticket.explanation ? (
               <div className="space-y-3.5">
-                {/* Status bar */}
-                <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
-                  <div className="flex items-center gap-2.5">
-                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold text-xs flex items-center gap-1.5">
-                      <FileCheck2 className="w-4 h-4 text-emerald-600" />
-                      Đã nộp biên bản qua GSM Driver
-                    </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-slate-700 text-xs font-medium">
-                      Nhóm lý do: <strong className="text-slate-900">{ticket.explanation.reasonCategory}</strong>
-                    </span>
-                  </div>
-                  <span className="text-xs text-slate-500 font-mono">
-                    Thời gian nộp: <strong>{ticket.explanation.submittedAt}</strong>
-                  </span>
-                </div>
 
                 {/* Hero Reading Area: Formal Statement Document */}
                 <div className="bg-white border-2 border-slate-200/90 rounded-2xl p-5 shadow-xs border-l-4 border-l-[#20B9BE]">
