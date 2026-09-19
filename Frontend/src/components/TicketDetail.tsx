@@ -5,25 +5,25 @@
  * Fraud Case Investigation & Adjudication Detail Workspace
  */
 
-import React, { useState } from 'react';
-import { 
-  ShieldAlert, 
-  Gavel, 
-  CheckCircle2, 
-  FileText, 
-  Phone, 
-  AlertTriangle, 
-  IdCard, 
-  Car, 
-  ExternalLink, 
-  Clock, 
-  MapPin, 
-  Coins, 
-  Zap, 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  ShieldAlert,
+  Gavel,
+  CheckCircle2,
+  FileText,
+  Phone,
+  AlertTriangle,
+  IdCard,
+  ExternalLink,
+  Clock,
+  MapPin,
+  Coins,
+  Zap,
   FileCheck2,
   Calendar,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
+  ChevronDown
 } from 'lucide-react';
 import { FraudCase, DecisionType, CaseDecision } from '../types';
 import { AdjudicationModal } from './modals/AdjudicationModal';
@@ -44,6 +44,28 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   onCallDriver,
 }) => {
   const [activeTab, setActiveTab] = useState<'explanation' | 'evidence' | 'driver_history'>('explanation');
+  const [showActionMenu, setShowActionMenu] = useState(false);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
+        setShowActionMenu(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowActionMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const [adjudicationModal, setAdjudicationModal] = useState<{
     isOpen: boolean;
     type: DecisionType;
@@ -99,81 +121,157 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
   return (
     <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col h-full">
-      {/* Top Bar: Case ID, Combined Fraud & Severity, Status */}
-      <div className="px-4 py-2 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3 min-h-[42px]">
+      {/* Top Bar: Case ID, Driver ID, Combined Fraud & Severity, and Action Popover */}
+      <div className="px-4 py-2.5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3 min-h-[46px]">
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="text-sm font-black text-slate-900 tracking-tight font-mono">
             HỒ SƠ #{ticket.id}
+          </span>
+          <span className="flex items-center gap-1 font-mono font-bold text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs text-xs">
+            <IdCard className="w-3.5 h-3.5 text-[#20B9BE]" />
+            Mã TX: {ticket.driver.id}
           </span>
           <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200/80">
             <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
             <span>{ticket.fraudTypeLabel}</span>
             <span className="text-rose-300">•</span>
-            <span className={`font-bold ${
-              ticket.severity === 'nghiem_trong' ? 'text-rose-700' :
+            <span className={`font-bold ${ticket.severity === 'nghiem_trong' ? 'text-rose-700' :
               ticket.severity === 'trung_binh' ? 'text-amber-700' : 'text-blue-700'
-            }`}>
+              }`}>
               {ticket.severityLabel}
             </span>
           </div>
         </div>
 
-        {/* Current status badge */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border shadow-2xs ${
-            ticket.status === 'da_tha_loi' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-            ticket.status === 'da_xu_phat' ? 'bg-rose-50 text-rose-800 border-rose-300' :
-            ticket.status === 'da_nop_cho_duyet' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-            'bg-slate-100 text-slate-700 border-slate-300'
-          }`}>
-            {ticket.status === 'da_nop_cho_duyet' ? 'Chờ duyệt phán quyết' : ticket.statusLabel}
-          </span>
-        </div>
-      </div>
-
-      {/* Driver Identity Card - Compact 1-Row Streamlined */}
-      <div className="px-4 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
-            {ticket.driver.name.slice(0, 2).toUpperCase()}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold text-slate-900">{ticket.driver.name}</span>
-            <span className="text-slate-400 font-mono font-medium">({ticket.driver.id})</span>
-          </div>
-          <span className="text-slate-300 hidden sm:inline">•</span>
-          <span className="flex items-center gap-1 font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-            <IdCard className="w-3.5 h-3.5 text-[#20B9BE]" />
-            CCCD: {ticket.driver.cccd}
-          </span>
-          <span className="font-mono text-slate-600 font-medium">{ticket.driver.phone}</span>
-          <span className="text-slate-300 hidden sm:inline">•</span>
-          <span className="flex items-center gap-1 text-slate-700 font-medium">
-            <Car className="w-3.5 h-3.5 text-slate-400" />
-            {ticket.driver.vehicleModel} - <strong className="font-mono text-slate-900">{ticket.driver.plate}</strong>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200">
-            <span className="text-slate-500 font-medium">Tín nhiệm:</span>
-            <span className={`font-black ${
-              ticket.driver.trustScore < 50 ? 'text-rose-600' : ticket.driver.trustScore < 75 ? 'text-amber-600' : 'text-emerald-600'
-            }`}>
-              {ticket.driver.trustScore}/100
-            </span>
-          </div>
-
+        {/* Current status & 5-action popover dropdown */}
+        <div className="relative" ref={actionMenuRef}>
           <button
-            id="btn-call-driver"
-            data-testid="btn-call-driver"
-            onClick={() => onCallDriver(ticket.driver.name, ticket.driver.phone)}
-            className="px-2.5 py-1 btn-gsm-subtle rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
-            title="Gọi thoại đối soát tài xế"
+            id="btn-case-action-menu"
+            data-testid="btn-case-action-menu"
+            onClick={() => setShowActionMenu(!showActionMenu)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border shadow-2xs flex items-center gap-2 cursor-pointer transition-all hover:brightness-95 active:scale-[0.98] ${ticket.status === 'da_tha_loi' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100/70' :
+              ticket.status === 'da_xu_phat' ? 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100/70' :
+                ticket.status === 'da_nop_cho_duyet' ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100/70' :
+                  'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200/70'
+              }`}
+            title="Nhấn để chọn thao tác xử lý & phán quyết"
           >
-            <Phone className="w-3.5 h-3.5 text-[#008284]" />
-            <span>Gọi đối soát</span>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${ticket.status === 'da_tha_loi' ? 'bg-emerald-500' :
+              ticket.status === 'da_xu_phat' ? 'bg-rose-500' :
+                ticket.status === 'da_nop_cho_duyet' ? 'bg-amber-500' :
+                  'bg-slate-400'
+              }`}></span>
+            <span>{ticket.status === 'da_nop_cho_duyet' ? 'Chờ duyệt' : ticket.statusLabel}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showActionMenu ? 'rotate-180' : ''}`} />
           </button>
+
+          {/* 5-Action Popover */}
+          {showActionMenu && (
+            <div className="absolute right-0 top-full mt-1.5 w-68 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="px-3.5 py-2 border-b border-slate-100">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Thao tác xử lý hồ sơ</span>
+              </div>
+
+              <div className="p-1 space-y-0.5">
+                {/* 1. Tha lỗi */}
+                <button
+                  id="btn-popover-dismiss"
+                  data-testid="btn-popover-dismiss"
+                  onClick={() => {
+                    handleOpenDecisionModal('tha_loi');
+                    setShowActionMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 group-hover:text-emerald-900">Tha lỗi / Minh oan</div>
+                    <div className="text-[10px] text-slate-500">Miễn chế tài khi giải trình hợp lý</div>
+                  </div>
+                </button>
+
+                {/* 2. Cảnh cáo */}
+                <button
+                  id="btn-popover-warn"
+                  data-testid="btn-popover-warn"
+                  onClick={() => {
+                    handleOpenDecisionModal('canh_cao');
+                    setShowActionMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-amber-50 text-slate-700 hover:text-amber-900 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 group-hover:text-amber-900">Cảnh cáo & Nhắc nhở</div>
+                    <div className="text-[10px] text-slate-500">Lập biên bản nhắc nhở vào hồ sơ</div>
+                  </div>
+                </button>
+
+                {/* 3. Yêu cầu bổ sung */}
+                <button
+                  id="btn-popover-request-info"
+                  data-testid="btn-popover-request-info"
+                  onClick={() => {
+                    handleOpenDecisionModal('yeu_cau_bo_sung');
+                    setShowActionMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-sky-50 text-slate-700 hover:text-sky-900 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 group-hover:text-sky-900">Yêu cầu bổ sung</div>
+                    <div className="text-[10px] text-slate-500">Yêu cầu gửi thêm chứng cứ / biên lai</div>
+                  </div>
+                </button>
+
+                {/* 4. Ra quyết định xử phạt */}
+                <button
+                  id="btn-popover-penalize"
+                  data-testid="btn-popover-penalize"
+                  onClick={() => {
+                    handleOpenDecisionModal('xu_phat_tien');
+                    setShowActionMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-rose-50 text-slate-700 hover:text-rose-900 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Gavel className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 group-hover:text-rose-900">Ra quyết định xử phạt</div>
+                    <div className="text-[10px] text-slate-500">Khấu trừ tiền phạt hoặc đình chỉ</div>
+                  </div>
+                </button>
+
+                <div className="my-1 border-t border-slate-100"></div>
+
+                {/* 5. Gọi đối soát */}
+                <button
+                  id="btn-popover-call"
+                  data-testid="btn-popover-call"
+                  onClick={() => {
+                    onCallDriver(ticket.driver.name, ticket.driver.phone);
+                    setShowActionMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-[#E3F8F8] text-slate-700 hover:text-[#006768] transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#E3F8F8] text-[#008284] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 group-hover:text-[#006768]">Gọi đối soát</div>
+                    <div className="text-[10px] text-slate-500">Gọi trực tiếp {ticket.driver.phone}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -183,11 +281,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           id="tab-detail-explanation"
           data-testid="tab-detail-explanation"
           onClick={() => setActiveTab('explanation')}
-          className={`py-2.5 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-            activeTab === 'explanation'
-              ? 'border-[#20B9BE] text-[#008284]'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`py-2.5 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${activeTab === 'explanation'
+            ? 'border-[#20B9BE] text-[#008284]'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <FileText className="w-4 h-4" />
           Biên Bản Giải Trình Từ Tài Xế
@@ -199,11 +296,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           id="tab-detail-evidence"
           data-testid="tab-detail-evidence"
           onClick={() => setActiveTab('evidence')}
-          className={`py-2.5 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-            activeTab === 'evidence'
-              ? 'border-[#20B9BE] text-[#008284]'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`py-2.5 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${activeTab === 'evidence'
+            ? 'border-[#20B9BE] text-[#008284]'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Zap className="w-4 h-4" />
           Dữ Liệu & Bằng Chứng Hệ Thống (Telematics)
@@ -212,11 +308,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           id="tab-detail-history"
           data-testid="tab-detail-history"
           onClick={() => setActiveTab('driver_history')}
-          className={`py-2.5 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-            activeTab === 'driver_history'
-              ? 'border-[#20B9BE] text-[#008284]'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+          className={`py-2.5 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${activeTab === 'driver_history'
+            ? 'border-[#20B9BE] text-[#008284]'
+            : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
         >
           <Clock className="w-4 h-4" />
           Lịch Sử & Tiền Lệ Vi Phạm ({ticket.driver.priorViolationsCount})
@@ -261,7 +356,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                     </span>
                   </div>
 
-                  <div 
+                  <div
                     id="reading-driver-statement"
                     data-testid="reading-driver-statement"
                     className="text-slate-900 text-[15px] sm:text-base leading-7 font-sans bg-slate-50/60 p-4 rounded-xl border border-slate-200/60 selection:bg-[#20B9BE]/20"
@@ -396,9 +491,8 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                         <span className="font-bold text-slate-800">{log.event}:</span>
                         <span className="text-slate-600">{log.detail}</span>
                       </div>
-                      <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                        log.severity === 'high' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'
-                      }`}>
+                      <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${log.severity === 'high' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'
+                        }`}>
                         {log.severity.toUpperCase()}
                       </span>
                     </div>
@@ -445,11 +539,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
         {/* DECISION SUMMARY BANNER (If already decided) */}
         {ticket.decision && (
-          <div className={`p-4 rounded-xl border space-y-2 mt-4 ${
-            ticket.decision.decisionType === 'tha_loi'
-              ? 'bg-emerald-50/80 border-emerald-300'
-              : 'bg-rose-50/80 border-rose-300'
-          }`}>
+          <div className={`p-4 rounded-xl border space-y-2 mt-4 ${ticket.decision.decisionType === 'tha_loi'
+            ? 'bg-emerald-50/80 border-emerald-300'
+            : 'bg-rose-50/80 border-rose-300'
+            }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {ticket.decision.decisionType === 'tha_loi' ? (
@@ -491,64 +584,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         )}
       </div>
 
-      {/* Bottom Adjudication Action Bar */}
-      <div className="p-3.5 border-t border-slate-200 bg-slate-50/90 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-xs text-slate-600 font-medium flex items-center gap-1.5 shrink-0">
-          <span>Quyền hạn trực ban:</span>
-          <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 font-bold">Ban Kiểm Soát Tuân Thủ GSM</strong>
-        </div>
 
-        {/* 4 Action Buttons - Ergonomically Enhanced with IDs & TestIDs */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-          {/* 1. Tha lỗi / Minh oan */}
-          <button
-            id="btn-adjudicate-dismiss"
-            data-testid="btn-adjudicate-dismiss"
-            onClick={() => handleOpenDecisionModal('tha_loi')}
-            className="px-3.5 py-2.5 btn-gsm-success font-bold rounded-xl text-sm flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap active:scale-[0.98]"
-            title="Miễn trách nhiệm cho tài xế khi có đủ căn cứ chính đáng"
-          >
-            <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
-            <span>Tha Lỗi / Minh Oan</span>
-          </button>
-
-          {/* 2. Cảnh cáo nhắc nhở */}
-          <button
-            id="btn-adjudicate-warn"
-            data-testid="btn-adjudicate-warn"
-            onClick={() => handleOpenDecisionModal('canh_cao')}
-            className="px-3 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors whitespace-nowrap active:scale-[0.98]"
-            title="Lập văn bản cảnh cáo và nhắc nhở vào hồ sơ tài xế"
-          >
-            <AlertTriangle className="w-4.5 h-4.5 shrink-0" />
-            <span>Cảnh Cáo</span>
-          </button>
-
-          {/* 3. Yêu cầu bổ sung */}
-          <button
-            id="btn-adjudicate-request-info"
-            data-testid="btn-adjudicate-request-info"
-            onClick={() => handleOpenDecisionModal('yeu_cau_bo_sung')}
-            className="px-3 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-semibold rounded-xl text-sm flex items-center gap-1.5 cursor-pointer transition-colors whitespace-nowrap active:scale-[0.98] shadow-2xs"
-            title="Yêu cầu tài xế gửi thêm hình ảnh hoặc biên lai đối soát"
-          >
-            <FileText className="w-4.5 h-4.5 text-sky-600 shrink-0" />
-            <span>Yêu Cầu Bổ Sung</span>
-          </button>
-
-          {/* 4. Ra quyết định xử phạt */}
-          <button
-            id="btn-adjudicate-penalize"
-            data-testid="btn-adjudicate-penalize"
-            onClick={() => handleOpenDecisionModal('xu_phat_tien')}
-            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-sm flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors whitespace-nowrap active:scale-[0.98]"
-            title="Khấu trừ tiền phạt hoặc áp dụng chế tài vi phạm quy chế"
-          >
-            <Gavel className="w-4.5 h-4.5 shrink-0" />
-            <span>Ra Quyết Định Xử Phạt</span>
-          </button>
-        </div>
-      </div>
 
       {/* Adjudication Modal */}
       <AdjudicationModal
