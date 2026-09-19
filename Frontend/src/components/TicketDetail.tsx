@@ -102,15 +102,15 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       {/* Top Bar: Case ID, Type, Severity & Action Status */}
       <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-black text-slate-900 tracking-tight font-mono">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="text-base font-black text-slate-900 tracking-tight font-mono">
               HỒ SƠ #{ticket.id}
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
-              <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1.5 shadow-2xs">
+              <ShieldAlert className="w-4 h-4 text-rose-600" />
               {ticket.fraudTypeLabel}
             </span>
-            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
               ticket.severity === 'nghiem_trong' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
               ticket.severity === 'trung_binh' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
               'bg-blue-50 text-blue-700 border border-blue-200'
@@ -125,7 +125,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
         {/* Current status badge */}
         <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+          <span className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border shadow-2xs ${
             ticket.status === 'da_tha_loi' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
             ticket.status === 'da_xu_phat' ? 'bg-rose-50 text-rose-800 border-rose-300' :
             ticket.status === 'da_nop_cho_duyet' ? 'bg-amber-50 text-amber-800 border-amber-300' :
@@ -140,35 +140,35 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       <div className="p-4 bg-white border-b border-slate-100">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 text-white font-black text-base flex items-center justify-center shadow-xs">
               {ticket.driver.name.slice(0, 2).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-900">{ticket.driver.name}</h3>
-                <span className="text-[11px] text-slate-400 font-mono">({ticket.driver.id})</span>
+                <h3 className="text-base font-bold text-slate-900">{ticket.driver.name}</h3>
+                <span className="text-xs text-slate-400 font-mono font-semibold">({ticket.driver.id})</span>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-0.5">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-1">
                 {/* Số CCCD nổi bật */}
-                <span className="flex items-center gap-1 font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                  <IdCard className="w-3.5 h-3.5 text-[#20B9BE]" />
+                <span className="flex items-center gap-1.5 font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                  <IdCard className="w-4 h-4 text-[#20B9BE]" />
                   CCCD: {ticket.driver.cccd}
                 </span>
-                <span className="font-mono text-slate-600">{ticket.driver.phone}</span>
+                <span className="font-mono text-slate-700 font-medium">{ticket.driver.phone}</span>
                 <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1 text-slate-800 font-medium">
-                  <Car className="w-3.5 h-3.5 text-slate-400" />
+                <span className="flex items-center gap-1.5 text-slate-800 font-medium">
+                  <Car className="w-4 h-4 text-slate-400" />
                   {ticket.driver.vehicleModel} - <strong className="font-mono">{ticket.driver.plate}</strong>
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3.5">
             {/* Trust score indicator */}
             <div className="text-right">
-              <div className="text-[11px] text-slate-500">Điểm Tín Nhiệm Tuân Thủ</div>
-              <div className="text-sm font-black">
+              <div className="text-xs text-slate-500 font-medium">Điểm Tín Nhiệm Tuân Thủ</div>
+              <div className="text-base font-black">
                 <span className={ticket.driver.trustScore < 50 ? 'text-rose-600' : ticket.driver.trustScore < 75 ? 'text-amber-600' : 'text-emerald-600'}>
                   {ticket.driver.trustScore}
                 </span>
@@ -178,9 +178,9 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
             <button
               onClick={() => onCallDriver(ticket.driver.name, ticket.driver.phone)}
-              className="px-3 py-1.5 btn-gsm-subtle rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-4 py-2 btn-gsm-subtle rounded-xl text-sm font-bold flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <Phone className="w-3.5 h-3.5 text-[#008284]" />
+              <Phone className="w-4 h-4 text-[#008284]" />
               Gọi thoại đối soát
             </button>
           </div>
@@ -188,41 +188,41 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       </div>
 
       {/* Tabs navigation */}
-      <div className="px-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2 text-xs">
+      <div className="px-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2 text-sm">
         <button
           onClick={() => setActiveTab('explanation')}
-          className={`py-2.5 px-3 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+          className={`py-3 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
             activeTab === 'explanation'
               ? 'border-[#20B9BE] text-[#008284]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <FileText className="w-3.5 h-3.5" />
+          <FileText className="w-4 h-4" />
           Biên Bản Giải Trình Từ Tài Xế
           {ticket.explanation && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="w-2 h-2 rounded-full bg-[#20B9BE]"></span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('evidence')}
-          className={`py-2.5 px-3 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+          className={`py-3 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
             activeTab === 'evidence'
               ? 'border-[#20B9BE] text-[#008284]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Zap className="w-3.5 h-3.5" />
+          <Zap className="w-4 h-4" />
           Dữ Liệu & Bằng Chứng Hệ Thống (Telematics)
         </button>
         <button
           onClick={() => setActiveTab('driver_history')}
-          className={`py-2.5 px-3 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+          className={`py-3 px-4 font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
             activeTab === 'driver_history'
               ? 'border-[#20B9BE] text-[#008284]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Clock className="w-3.5 h-3.5" />
+          <Clock className="w-4 h-4" />
           Lịch Sử & Tiền Lệ Vi Phạm ({ticket.driver.priorViolationsCount})
         </button>
       </div>
@@ -234,28 +234,28 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           <div className="space-y-4">
             {ticket.explanation ? (
               <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[11px] flex items-center gap-1">
-                      <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
+                <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
+                  <div className="flex items-center gap-2.5">
+                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold text-xs flex items-center gap-1.5">
+                      <FileCheck2 className="w-4 h-4 text-emerald-600" />
                       Đã nộp biên bản qua GSM Driver
                     </span>
                     <span className="text-slate-400">•</span>
-                    <span className="text-slate-600 font-medium">
+                    <span className="text-slate-700 text-xs font-medium">
                       Nhóm lý do: <strong>{ticket.explanation.reasonCategory}</strong>
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <span className="text-xs text-slate-500 font-mono">
                     Nộp lúc: {ticket.explanation.submittedAt}
                   </span>
                 </div>
 
                 {/* Content Statement */}
                 <div>
-                  <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Lời Khai / Bản Giải Trình Tự Bào Chữa Của Tài Xế:
                   </h4>
-                  <div className="bg-white p-3.5 rounded-lg border border-slate-200 text-slate-800 leading-relaxed text-xs font-sans shadow-2xs">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 text-slate-800 leading-relaxed text-sm font-sans shadow-2xs">
                     "{ticket.explanation.content}"
                   </div>
                 </div>
@@ -474,7 +474,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               </div>
             )}
 
-            <div className="text-[11px] text-slate-600 bg-white/70 p-2 rounded-lg border border-slate-200/60 mt-1">
+            <div className="text-xs text-slate-600 bg-white/70 p-2.5 rounded-lg border border-slate-200/60 mt-1">
               <strong>Đã gửi về app tài xế:</strong> "{ticket.decision.messageToDriver}"
             </div>
           </div>
@@ -482,47 +482,52 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       </div>
 
       {/* Bottom Adjudication Action Bar */}
-      <div className="p-3.5 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-xs text-slate-500">
-          Quyền hạn: <strong>Ban Kiểm Soát Tuân Thủ GSM</strong>
+      <div className="p-3.5 border-t border-slate-200 bg-slate-50/90 flex flex-wrap items-center justify-between gap-3">
+        <div className="text-xs text-slate-600 font-medium flex items-center gap-1.5 shrink-0">
+          <span>Quyền hạn trực ban:</span>
+          <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 font-bold">Ban Kiểm Soát Tuân Thủ GSM</strong>
         </div>
 
-        {/* 4 Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* 4 Action Buttons - Ergonomically Enhanced with Single-Line Labels */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
           {/* 1. Tha lỗi / Minh oan */}
           <button
             onClick={() => handleOpenDecisionModal('tha_loi')}
-            className="px-3.5 py-2 btn-gsm-success font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2.5 btn-gsm-success font-bold rounded-xl text-sm flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap active:scale-[0.98]"
+            title="Miễn trách nhiệm cho tài xế khi có đủ căn cứ chính đáng"
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Tha Lỗi / Minh Oan
+            <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
+            <span>Tha Lỗi / Minh Oan</span>
           </button>
 
           {/* 2. Cảnh cáo nhắc nhở */}
           <button
             onClick={() => handleOpenDecisionModal('canh_cao')}
-            className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+            className="px-3 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors whitespace-nowrap active:scale-[0.98]"
+            title="Lập văn bản cảnh cáo và nhắc nhở vào hồ sơ tài xế"
           >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            Cảnh Cáo
+            <AlertTriangle className="w-4.5 h-4.5 shrink-0" />
+            <span>Cảnh Cáo</span>
           </button>
 
           {/* 3. Yêu cầu bổ sung */}
           <button
             onClick={() => handleOpenDecisionModal('yeu_cau_bo_sung')}
-            className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+            className="px-3 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-semibold rounded-xl text-sm flex items-center gap-1.5 cursor-pointer transition-colors whitespace-nowrap active:scale-[0.98] shadow-2xs"
+            title="Yêu cầu tài xế gửi thêm hình ảnh hoặc biên lai đối soát"
           >
-            <FileText className="w-3.5 h-3.5 text-sky-600" />
-            Yêu Cầu Thêm Bằng Chứng
+            <FileText className="w-4.5 h-4.5 text-sky-600 shrink-0" />
+            <span>Yêu Cầu Bổ Sung</span>
           </button>
 
           {/* 4. Ra quyết định xử phạt */}
           <button
             onClick={() => handleOpenDecisionModal('xu_phat_tien')}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-sm flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors whitespace-nowrap active:scale-[0.98]"
+            title="Khấu trừ tiền phạt hoặc áp dụng chế tài vi phạm quy chế"
           >
-            <Gavel className="w-4 h-4" />
-            Ra Quyết Định Xử Phạt
+            <Gavel className="w-4.5 h-4.5 shrink-0" />
+            <span>Ra Quyết Định Xử Phạt</span>
           </button>
         </div>
       </div>

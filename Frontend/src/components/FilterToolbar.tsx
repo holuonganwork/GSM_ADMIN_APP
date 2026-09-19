@@ -75,15 +75,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
           {/* Quick search input: Case ID, Driver Name, CCCD, Plate */}
-          <div className="relative w-56 sm:w-64">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative w-64 sm:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               id="filter-case-search"
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Tìm mã hồ sơ, CCCD, tên tài xế..."
-              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-[#20B9BE] rounded-lg text-xs font-medium text-slate-800 focus:outline-none transition-all"
+              className="w-full pl-9 pr-3.5 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-[#20B9BE] rounded-xl text-sm font-medium text-slate-800 focus:outline-none transition-all"
             />
           </div>
 
@@ -93,7 +93,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               id="filter-fraud-type-select"
               value={selectedFraudType}
               onChange={(e) => onFraudTypeChange(e.target.value)}
-              className="appearance-none pl-8 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
+              className="appearance-none pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
             >
               <option value="all">Tất cả loại vi phạm gian lận</option>
               <option value="cuoc_ao">Cuốc ảo / Chạy khống (Bonus hunting)</option>
@@ -102,8 +102,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               <option value="thu_cuoc_sai">Thu cước sai / Thu ngoài app</option>
               <option value="tat_dinh_vi">Ngắt kết nối T-Box Telematics</option>
             </select>
-            <ShieldAlert className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ShieldAlert className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Severity Dropdown */}
@@ -112,15 +112,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               id="filter-severity-select"
               value={selectedSeverity}
               onChange={(e) => onSeverityChange(e.target.value)}
-              className="appearance-none pl-8 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none cursor-pointer"
+              className="appearance-none pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
             >
               <option value="all">Tất cả mức độ nghiêm trọng</option>
               <option value="nghiem_trong">Nghiêm trọng (Cần đình chỉ)</option>
               <option value="trung_binh">Trung bình (Thẩm định biên bản)</option>
               <option value="nhe">Nhẹ (Xem xét nhắc nhở)</option>
             </select>
-            <AlertTriangle className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <AlertTriangle className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
@@ -130,42 +130,42 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             <button
               id="btn-export-report"
               onClick={onExportReport}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
+              className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <Download className="w-4 h-4 text-slate-500" />
               <span>Xuất biên bản</span>
             </button>
           )}
 
-          {/* Manual Refresh button: small square icon-only */}
+          {/* Manual Refresh button */}
           <button
             id="btn-manual-refresh"
             onClick={handleManualRefresh}
             disabled={isRefreshing}
-            className="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 hover:text-slate-900 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-60"
+            className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 hover:text-slate-900 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-60"
             title="Làm mới dữ liệu"
           >
-            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#008284]' : 'text-slate-500'}`} />
+            <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#008284]' : 'text-slate-500'}`} />
           </button>
         </div>
       </div>
 
       {/* Bottom row: Status Category Tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto pt-1 border-t border-slate-100 no-scrollbar">
+      <div className="flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-slate-100 no-scrollbar">
         {statusTabs.map((tab) => {
           const isActive = currentStatusTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onStatusTabChange(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${isActive
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${isActive
                   ? 'btn-gsm-primary'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
             >
               <span>{tab.label}</span>
               {tab.badge !== undefined && (
-                <span className={`px-1.5 py-0.2 text-[10px] rounded-full ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
+                <span className={`px-2 py-0.5 text-xs rounded-full ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
                   {tab.badge}
                 </span>
               )}

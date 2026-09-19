@@ -166,23 +166,23 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
               filtered.map((d) => (
                 <tr key={d.id} className="hover:bg-slate-50/70 transition-colors">
                   <td className="p-3">
-                    <div className="font-bold text-slate-900">{d.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">{d.id}</div>
+                    <div className="font-bold text-slate-900 text-sm">{d.name}</div>
+                    <div className="text-xs text-slate-400 font-mono">{d.id}</div>
                   </td>
                   {/* Căn cước công dân (CCCD) */}
                   <td className="p-3">
-                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 text-xs">
                       {d.cccd}
                     </span>
                   </td>
-                  <td className="p-3 font-mono text-slate-700">{d.phone}</td>
+                  <td className="p-3 font-mono text-slate-700 text-xs">{d.phone}</td>
                   <td className="p-3">
-                    <div className="font-medium text-slate-800">{d.vehicleModel}</div>
-                    <div className="font-mono text-[10px] text-slate-500">{d.plate}</div>
+                    <div className="font-medium text-slate-800 text-sm">{d.vehicleModel}</div>
+                    <div className="font-mono text-xs text-slate-500">{d.plate}</div>
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <span className={`font-black text-xs px-2 py-0.5 rounded-full ${
+                      <span className={`font-black text-xs px-2.5 py-0.5 rounded-full ${
                         d.trustScore < 50 ? 'bg-rose-100 text-rose-700' :
                         d.trustScore < 75 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700'
                       }`}>
@@ -192,24 +192,24 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
                   </td>
                   <td className="p-3 text-center">
                     {d.priorViolationsCount > 0 ? (
-                      <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold border border-rose-200 text-[11px]">
+                      <span className="px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 font-bold border border-rose-200 text-xs">
                         {d.priorViolationsCount} lần
                       </span>
                     ) : (
-                      <span className="text-slate-400 text-[11px]">0 lần (Tốt)</span>
+                      <span className="text-slate-400 text-xs font-medium">0 lần (Tốt)</span>
                     )}
                   </td>
                   <td className="p-3">
                     {d.trustScore < 30 ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
                         Đang tạm khóa
                       </span>
                     ) : d.trustScore < 60 ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
                         Theo dõi đặc biệt
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                         Bình thường
                       </span>
                     )}
@@ -218,9 +218,9 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
                     <div className="flex justify-end gap-1.5">
                       <button
                         onClick={() => onCallDriver(d.name, d.phone)}
-                        className="px-2.5 py-1 btn-gsm-subtle rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                        className="px-3.5 py-1.5 btn-gsm-subtle rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
                       >
-                        <Phone className="w-3 h-3 text-[#008284]" />
+                        <Phone className="w-3.5 h-3.5 text-[#008284]" />
                         Gọi đối soát
                       </button>
                     </div>
