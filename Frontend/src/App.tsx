@@ -9,7 +9,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Sidebar, NavTab } from './components/Sidebar';
-import { FilterToolbar } from './components/FilterToolbar';
 import { TicketQueue } from './components/TicketQueue';
 import { TicketDetail } from './components/TicketDetail';
 import { DriverDirectoryView } from './components/views/DriverDirectoryView';
@@ -298,6 +297,17 @@ export default function App() {
           showToast(`Đã cập nhật trạng thái: ${status === 'online' ? 'Sẵn sàng thẩm định' : status === 'break' ? 'Nghỉ giải lao' : 'Hội ý phán quyết'}`);
           operatorApi.updateStatus(status).catch(() => {});
         }}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedFraudType={selectedFraudType}
+        onFraudTypeChange={setSelectedFraudType}
+        selectedSeverity={selectedSeverity}
+        onSeverityChange={setSelectedSeverity}
+        onSearchFocus={() => {
+          if (currentTab !== 'cases') {
+            setCurrentTab('cases');
+          }
+        }}
       />
 
       {/* Main Layout: Sidebar + Desk Workspace */}
@@ -316,34 +326,30 @@ export default function App() {
         {/* Center Content Workspace */}
         <main className="flex-1 flex flex-col overflow-hidden p-3.5 bg-[#f8f9ff]">
           {currentTab === 'cases' && (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Filter Toolbar for Fraud Type, Severity, Status */}
-              <FilterToolbar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
+            <div className="flex-1 flex flex-col lg:flex-row gap-3 overflow-hidden min-h-0">
+              {/* Left: Queue of Fraud Cases with Status Tabs */}
+              <TicketQueue
+                tickets={filteredCases}
+                selectedTicketId={selectedCase?.id || ''}
+                onSelectTicket={(c) => setSelectedCaseId(c.id)}
+                isLoading={isLoading}
+                currentStatusTab={currentStatusTab}
+                onStatusTabChange={setCurrentStatusTab}
+                pendingCount={metrics.pendingReview}
                 selectedFraudType={selectedFraudType}
                 onFraudTypeChange={setSelectedFraudType}
                 selectedSeverity={selectedSeverity}
                 onSeverityChange={setSelectedSeverity}
-                currentStatusTab={currentStatusTab}
-                onStatusTabChange={setCurrentStatusTab}
+                onResetFilters={() => {
+                  setSelectedFraudType('all');
+                  setSelectedSeverity('all');
+                }}
                 onExportReport={() => setIsExportShiftOpen(true)}
                 onManualRefresh={() => {
                   loadInitialData();
                   showToast('Đang tải dữ liệu hồ sơ mới nhất từ máy chủ...');
                 }}
-                pendingCount={metrics.pendingReview}
               />
-
-              {/* 2-Column Split: Cases Queue (Left) & Investigation & Adjudication Detail (Right) */}
-              <div className="flex-1 flex flex-col lg:flex-row gap-3 overflow-hidden min-h-0">
-                {/* Left: Queue of Fraud Cases */}
-                <TicketQueue
-                  tickets={filteredCases}
-                  selectedTicketId={selectedCase?.id || ''}
-                  onSelectTicket={(c) => setSelectedCaseId(c.id)}
-                  isLoading={isLoading}
-                />
 
                 {/* Right: Adjudication Workspace */}
                 {selectedCase ? (
@@ -376,7 +382,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-            </div>
           )}
 
           {/* Tab 2: Driver Compliance & Trust Directory by CCCD */}

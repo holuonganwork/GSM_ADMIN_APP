@@ -7,43 +7,53 @@
 
 import React, { useState } from 'react';
 import {
-  Search,
+  Download,
+  RotateCw,
+  X,
+  SlidersHorizontal,
   ShieldAlert,
   AlertTriangle,
-  Download,
-  Plus,
-  RotateCw,
-  ChevronDown,
-  FileCheck2,
-  CheckCircle2,
-  Gavel
 } from 'lucide-react';
-import { CaseStatus, FraudType, CaseSeverity } from '../types';
+import { CaseStatus } from '../types';
 
 interface FilterToolbarProps {
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-  selectedFraudType: string;
-  onFraudTypeChange: (type: string) => void;
-  selectedSeverity: string;
-  onSeverityChange: (sev: string) => void;
   currentStatusTab: CaseStatus;
   onStatusTabChange: (status: CaseStatus) => void;
-  onOpenCreateCase?: () => void;
+  selectedFraudType?: string;
+  onFraudTypeChange?: (type: string) => void;
+  selectedSeverity?: string;
+  onSeverityChange?: (sev: string) => void;
+  onResetFilters?: () => void;
   onExportReport?: () => void;
   onManualRefresh: () => void;
   pendingCount?: number;
+  // Optional for backward compatibility
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
+const fraudTypeLabels: Record<string, string> = {
+  cuoc_ao: 'Cuốc ảo / Chạy khống',
+  gps_spoofing: 'Giả lập vị trí GPS',
+  gian_lan_voucher: 'Trục lợi Voucher',
+  thu_cuoc_sai: 'Thu cước sai',
+  tat_dinh_vi: 'Ngắt kết nối T-Box',
+};
+
+const severityLabels: Record<string, string> = {
+  nghiem_trong: 'Nghiêm trọng',
+  trung_binh: 'Trung bình',
+  nhe: 'Nhẹ',
+};
+
 export const FilterToolbar: React.FC<FilterToolbarProps> = ({
-  searchQuery,
-  onSearchChange,
-  selectedFraudType,
-  onFraudTypeChange,
-  selectedSeverity,
-  onSeverityChange,
   currentStatusTab,
   onStatusTabChange,
+  selectedFraudType = 'all',
+  onFraudTypeChange,
+  selectedSeverity = 'all',
+  onSeverityChange,
+  onResetFilters,
   onExportReport,
   onManualRefresh,
   pendingCount = 0,
@@ -55,6 +65,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
     onManualRefresh();
     setTimeout(() => setIsRefreshing(false), 600);
   };
+
+  const hasActiveFilters = selectedFraudType !== 'all' || selectedSeverity !== 'all';
 
   const statusTabs = [
     { id: 'all' as CaseStatus, label: 'Tất cả vụ vi phạm' },
@@ -69,71 +81,44 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   ];
 
   return (
-    <div className="bg-white border border-slate-200/90 rounded-xl p-3 mb-3 shadow-2xs space-y-3">
-      {/* Top row: Search input & Action dropdowns */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
-          {/* Quick search input: Case ID, Driver Name, CCCD, Plate */}
-          <div className="relative w-64 sm:w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="filter-case-search"
-              data-testid="filter-case-search"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Tìm mã hồ sơ, CCCD, tên tài xế..."
-              className="w-full pl-9 pr-3.5 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-[#20B9BE] rounded-xl text-sm font-medium text-slate-800 focus:outline-none transition-all"
-            />
-          </div>
-
-          {/* Fraud Type Dropdown */}
-          <div className="relative">
-            <select
-              id="filter-fraud-type-select"
-              data-testid="filter-fraud-type-select"
-              value={selectedFraudType}
-              onChange={(e) => onFraudTypeChange(e.target.value)}
-              className="appearance-none pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
-            >
-              <option value="all">Tất cả loại vi phạm gian lận</option>
-              <option value="cuoc_ao">Cuốc ảo / Chạy khống (Bonus hunting)</option>
-              <option value="gps_spoofing">Giả lập vị trí GPS (Mock Location)</option>
-              <option value="gian_lan_voucher">Trục lợi mã giảm giá Voucher</option>
-              <option value="thu_cuoc_sai">Thu cước sai / Thu ngoài app</option>
-              <option value="tat_dinh_vi">Ngắt kết nối T-Box Telematics</option>
-            </select>
-            <ShieldAlert className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {/* Severity Dropdown */}
-          <div className="relative">
-            <select
-              id="filter-severity-select"
-              data-testid="filter-severity-select"
-              value={selectedSeverity}
-              onChange={(e) => onSeverityChange(e.target.value)}
-              className="appearance-none pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
-            >
-              <option value="all">Tất cả mức độ nghiêm trọng</option>
-              <option value="nghiem_trong">Nghiêm trọng (Cần đình chỉ)</option>
-              <option value="trung_binh">Trung bình (Thẩm định biên bản)</option>
-              <option value="nhe">Nhẹ (Xem xét nhắc nhở)</option>
-            </select>
-            <AlertTriangle className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+    <div className="bg-white border border-slate-200/90 rounded-xl p-2.5 mb-3 shadow-2xs space-y-2">
+      {/* Top row: Status Tabs & Action Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Status Category Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {statusTabs.map((tab) => {
+            const isActive = currentStatusTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                id={`filter-tab-${tab.id}`}
+                data-testid={`filter-tab-${tab.id}`}
+                onClick={() => onStatusTabChange(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  isActive
+                    ? 'btn-gsm-primary shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {tab.badge !== undefined && (
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Right buttons: Export Report & Auto Refresh */}
-        <div className="flex items-center gap-2">
+        {/* Right buttons: Export Report & Manual Refresh */}
+        <div className="flex items-center gap-2 shrink-0">
           {onExportReport && (
             <button
               id="btn-export-report"
               data-testid="btn-export-report"
               onClick={onExportReport}
-              className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
             >
               <Download className="w-4 h-4 text-slate-500" />
               <span>Xuất biên bản</span>
@@ -146,39 +131,63 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             data-testid="btn-manual-refresh"
             onClick={handleManualRefresh}
             disabled={isRefreshing}
-            className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 hover:text-slate-900 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-60"
+            className="w-8.5 h-8.5 flex items-center justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 hover:text-slate-900 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-60"
             title="Làm mới dữ liệu"
           >
-            <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#008284]' : 'text-slate-500'}`} />
+            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#008284]' : 'text-slate-500'}`} />
           </button>
         </div>
       </div>
 
-      {/* Bottom row: Status Category Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-slate-100 no-scrollbar">
-        {statusTabs.map((tab) => {
-          const isActive = currentStatusTab === tab.id;
-          return (
+      {/* Active Filter Chips (displayed if any header filter is active, webmail style) */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs animate-in fade-in duration-150">
+          <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#008284]" />
+            <span>Bộ lọc đang áp dụng:</span>
+          </div>
+
+          {selectedFraudType !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200/70 text-rose-800 font-medium">
+              <ShieldAlert className="w-3 h-3 text-rose-600" />
+              <span>Loại: {fraudTypeLabels[selectedFraudType] || selectedFraudType}</span>
+              <button
+                type="button"
+                onClick={() => onFraudTypeChange?.('all')}
+                className="hover:bg-rose-200/60 rounded-full p-0.5 text-rose-600 cursor-pointer"
+                title="Gỡ bộ lọc này"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {selectedSeverity !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200/70 text-amber-800 font-medium">
+              <AlertTriangle className="w-3 h-3 text-amber-600" />
+              <span>Mức độ: {severityLabels[selectedSeverity] || selectedSeverity}</span>
+              <button
+                type="button"
+                onClick={() => onSeverityChange?.('all')}
+                className="hover:bg-amber-200/60 rounded-full p-0.5 text-amber-600 cursor-pointer"
+                title="Gỡ bộ lọc này"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {onResetFilters && (
             <button
-              key={tab.id}
-              id={`filter-tab-${tab.id}`}
-              data-testid={`filter-tab-${tab.id}`}
-              onClick={() => onStatusTabChange(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${isActive
-                  ? 'btn-gsm-primary'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
+              type="button"
+              onClick={onResetFilters}
+              className="text-slate-400 hover:text-slate-700 underline text-xs cursor-pointer ml-1"
             >
-              <span>{tab.label}</span>
-              {tab.badge !== undefined && (
-                <span className={`px-2 py-0.5 text-xs rounded-full ${tab.badgeColor || 'bg-slate-200 text-slate-700'}`}>
-                  {tab.badge}
-                </span>
-              )}
+              Xóa tất cả
             </button>
-          );
-        })}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
