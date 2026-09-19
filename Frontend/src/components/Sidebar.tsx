@@ -44,13 +44,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Hồ Sơ Gian Lận & Giải Trình',
       shortLabel: 'Hồ sơ',
       icon: ShieldAlert,
-      badge: pendingCount > 0 ? `${pendingCount} chờ duyệt` : caseCount,
+      badge: pendingCount > 0 ? pendingCount : (caseCount > 0 ? caseCount : undefined),
+      badgeTitle: pendingCount > 0 ? `${pendingCount} hồ sơ chờ duyệt` : `${caseCount} hồ sơ`,
       countOnly: pendingCount > 0 ? pendingCount : caseCount,
       badgeHighlight: pendingCount > 0,
     },
     {
       id: 'driver_compliance' as NavTab,
-      label: 'Hồ Sơ Tín Nhiệm & CCCD Tài Xế',
+      label: 'Hồ Sơ Tín Nhiệm & CCCD',
       shortLabel: 'Tài xế',
       icon: IdCard,
     },
@@ -69,17 +70,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id="sidebar-container"
       data-testid="sidebar-container"
       className={`${
-        isCollapsed ? 'w-18' : 'w-64'
-      } bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 h-[calc(100vh-3.5rem)] select-none transition-all duration-300 relative`}
+        isCollapsed ? 'w-18' : 'w-72'
+      } bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 h-[calc(100vh-3.5rem)] select-none transition-all duration-300 relative overflow-hidden`}
     >
       {/* Top Section: Title & Navigation */}
-      <div className="p-3">
+      <div className={isCollapsed ? 'p-2 pt-3' : 'p-3'}>
         {/* Header label / Toggle button */}
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-1.5 py-1.5 mb-1 text-[11px] font-bold text-slate-400 tracking-wider`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center mb-3' : 'justify-between px-1.5 py-1.5 mb-1'} text-[11px] font-bold text-slate-400 tracking-wider`}>
           {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <img src="/greensm-mini-logo.png" alt="GSM" className="h-3.5 w-auto object-contain opacity-80" />
-              <span className="uppercase font-mono text-slate-500">KIỂM SOÁT GSM</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <img src="/greensm-mini-logo.png" alt="GSM" className="h-3.5 w-auto object-contain opacity-80 shrink-0" />
+              <span className="uppercase font-mono text-slate-500 truncate">KIỂM SOÁT GSM</span>
             </div>
           )}
           
@@ -88,11 +89,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id="btn-toggle-sidebar"
               data-testid="btn-toggle-sidebar"
               onClick={onToggleCollapse}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              className={`${
+                isCollapsed
+                  ? 'w-11 h-11 mx-auto flex items-center justify-center rounded-xl hover:bg-slate-100'
+                  : 'p-1.5 rounded-lg hover:bg-slate-100'
+              } text-slate-500 hover:text-slate-800 transition-colors cursor-pointer shrink-0`}
               title={isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
             >
               {isCollapsed ? (
-                <PanelLeftOpen className="w-4.5 h-4.5 text-[#008284]" />
+                <PanelLeftOpen className="w-5 h-5 text-[#008284]" />
               ) : (
                 <PanelLeftClose className="w-4.5 h-4.5 text-slate-500 hover:text-[#008284]" />
               )}
@@ -111,36 +116,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   id={`sidebar-nav-${item.id}`}
                   data-testid={`sidebar-nav-${item.id}`}
                   onClick={() => onTabChange(item.id)}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-0 py-3' : 'justify-between px-3.5 py-3'
-                  } rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                  title={item.label}
+                  className={`${
+                    isCollapsed 
+                      ? 'w-11 h-11 mx-auto flex items-center justify-center p-0' 
+                      : 'w-full flex items-center justify-between px-2.5 py-2.5'
+                  } rounded-xl text-sm font-semibold transition-all cursor-pointer overflow-hidden relative ${
                     isActive
                       ? 'btn-gsm-primary'
                       : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <div className="flex items-center gap-3 relative">
-                    <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                    {!isCollapsed && <span className="truncate">{item.label}</span>}
-                    
-                    {/* Collapsed dot/badge indicator */}
-                    {isCollapsed && item.badgeHighlight && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white"></span>
-                    )}
-                  </div>
+                  {isCollapsed ? (
+                    <>
+                      <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-600'}`} />
+                      {item.badgeHighlight && (
+                        <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white"></span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                        <span className="truncate whitespace-nowrap text-[13px] font-semibold text-left">
+                          {item.label}
+                        </span>
+                      </div>
 
-                  {!isCollapsed && item.badge !== undefined && (
-                    <span
-                      className={`px-2 py-0.5 text-xs font-bold rounded-full shrink-0 ${
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : item.badgeHighlight
-                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                          : 'bg-[#20B9BE]/15 text-[#006768]'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
+                      {item.badge !== undefined && (
+                        <span
+                          title={item.badgeTitle}
+                          className={`ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full shrink-0 ${
+                            isActive
+                              ? 'bg-white/20 text-white'
+                              : item.badgeHighlight
+                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                              : 'bg-[#20B9BE]/15 text-[#006768]'
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
                   )}
                 </button>
 
@@ -162,7 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Shift KPI Box */}
-      <div className="p-3 border-t border-slate-200/80 bg-slate-50/50">
+      <div className={isCollapsed ? 'p-2 border-t border-slate-200/80 bg-slate-50/50' : 'p-3 border-t border-slate-200/80 bg-slate-50/50'}>
         {!isCollapsed ? (
           <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
             <div className="flex items-center justify-between mb-2">
@@ -201,8 +218,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center py-2 group relative">
-            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs cursor-pointer hover:border-[#20B9BE] transition-colors">
+          <div className="flex flex-col items-center py-1 group relative">
+            <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs cursor-pointer hover:border-[#20B9BE] hover:bg-slate-50 transition-colors">
               <Activity className="w-5 h-5 text-[#008284]" />
             </div>
             {/* Tooltip for mini KPI */}
