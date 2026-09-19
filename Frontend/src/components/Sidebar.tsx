@@ -13,17 +13,19 @@ import {
   Activity, 
   Coins,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  History
 } from 'lucide-react';
 import { ComplianceMetrics } from '../types';
 
-export type NavTab = 'cases' | 'driver_compliance' | 'fraud_analytics';
+export type NavTab = 'cases' | 'case_history' | 'driver_compliance' | 'fraud_analytics';
 
 interface SidebarProps {
   currentTab: NavTab;
   onTabChange: (tab: NavTab) => void;
   caseCount?: number;
   pendingCount?: number;
+  historyCount?: number;
   metrics?: ComplianceMetrics;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -34,20 +36,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onTabChange,
   caseCount = 0,
   pendingCount = 0,
+  historyCount,
   metrics,
   isCollapsed = false,
   onToggleCollapse,
 }) => {
+  const processedCount = historyCount !== undefined ? historyCount : ((metrics?.exoneratedCount ?? 0) + (metrics?.penalizedCount ?? 0));
+
   const navItems = [
     {
       id: 'cases' as NavTab,
-      label: 'Hồ Sơ Gian Lận & Giải Trình',
-      shortLabel: 'Hồ sơ',
+      label: 'Hồ Sơ Chờ Thẩm Định',
+      shortLabel: 'Chờ duyệt',
       icon: ShieldAlert,
-      badge: pendingCount > 0 ? pendingCount : (caseCount > 0 ? caseCount : undefined),
-      badgeTitle: pendingCount > 0 ? `${pendingCount} hồ sơ chờ duyệt` : `${caseCount} hồ sơ`,
-      countOnly: pendingCount > 0 ? pendingCount : caseCount,
+      badge: pendingCount > 0 ? pendingCount : undefined,
+      badgeTitle: `${pendingCount} hồ sơ chờ duyệt`,
+      countOnly: pendingCount,
       badgeHighlight: pendingCount > 0,
+    },
+    {
+      id: 'case_history' as NavTab,
+      label: 'Lịch Sử Phán Quyết & Xử Lý',
+      shortLabel: 'Lịch sử',
+      icon: History,
+      badge: processedCount > 0 ? processedCount : undefined,
+      badgeTitle: `${processedCount} hồ sơ đã hoàn tất`,
+      countOnly: processedCount,
+      badgeHighlight: false,
     },
     {
       id: 'driver_compliance' as NavTab,
@@ -62,8 +77,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Scale,
     },
   ];
-
-  const processedCount = (metrics?.exoneratedCount ?? 0) + (metrics?.penalizedCount ?? 0);
 
   return (
     <aside 

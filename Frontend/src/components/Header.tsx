@@ -19,6 +19,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { OperatorProfile, defaultOperatorProfile } from '../types';
+import { NavTab } from './Sidebar';
 
 interface HeaderProps {
   operatorProfile?: OperatorProfile;
@@ -30,6 +31,7 @@ interface HeaderProps {
   selectedSeverity?: string;
   onSeverityChange?: (sev: string) => void;
   onSearchFocus?: () => void;
+  currentTab?: NavTab;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   selectedSeverity = 'all',
   onSeverityChange,
   onSearchFocus,
+  currentTab = 'cases',
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -111,6 +114,20 @@ export const Header: React.FC<HeaderProps> = ({
     { value: 'nhe', label: 'Nhẹ (Xem xét nhắc nhở)', color: 'bg-sky-500' },
   ];
 
+  const getSearchPlaceholder = () => {
+    switch (currentTab) {
+      case 'case_history':
+        return 'Tìm lịch sử phán quyết (mã hồ sơ, CCCD, tài xế, quyết định)...';
+      case 'driver_compliance':
+        return 'Tìm tài xế theo CCCD, tên, SĐT, biển số xe...';
+      case 'fraud_analytics':
+        return 'Tìm theo loại vi phạm, vụ án, biển số...';
+      case 'cases':
+      default:
+        return 'Tìm hồ sơ chờ xử lý (mã, CCCD, tên tài xế, biển số)...';
+    }
+  };
+
   return (
     <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-0 z-30 shadow-xs gap-4">
       {/* Left: Logo */}
@@ -129,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange?.(e.target.value)}
             onFocus={onSearchFocus}
-            placeholder="Tìm mã hồ sơ, CCCD, tên tài xế, biển số xe..."
+            placeholder={getSearchPlaceholder()}
             className="flex-1 bg-transparent text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none min-w-0"
           />
           {searchQuery && (

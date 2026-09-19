@@ -88,8 +88,8 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
       badge: pendingCount > 0 ? pendingCount : undefined,
       badgeColor: 'bg-amber-500 text-white font-bold'
     },
-    { id: 'da_tha_loi' as CaseStatus, label: 'Đã tha lỗi' },
-    { id: 'da_xu_phat' as CaseStatus, label: 'Đã xử phạt' },
+    { id: 'cho_tai_xe_giai_trinh' as CaseStatus, label: 'Chờ nộp' },
+    { id: 'yeu_cau_bo_sung' as CaseStatus, label: 'Bổ sung' },
   ];
 
   const getFraudBadge = (type: string) => {
@@ -134,7 +134,7 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
-              HỒ SƠ GIAN LẬN & GIẢI TRÌNH
+              HỒ SƠ CHỜ THẨM ĐỊNH
             </h3>
             <span className="px-2 py-0.5 bg-slate-200/80 text-slate-700 rounded-full text-[11px] font-bold">
               {tickets.length}

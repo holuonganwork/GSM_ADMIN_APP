@@ -11,6 +11,7 @@ import { Header } from './components/Header';
 import { Sidebar, NavTab } from './components/Sidebar';
 import { TicketQueue } from './components/TicketQueue';
 import { TicketDetail } from './components/TicketDetail';
+import { CaseHistoryView } from './components/views/CaseHistoryView';
 import { DriverDirectoryView } from './components/views/DriverDirectoryView';
 import { SLAReportView } from './components/views/SLAReportView';
 import { DriverCallModal } from './components/modals/DriverCallModal';
@@ -28,6 +29,10 @@ import {
 import { complianceApi, operatorApi, notificationApi } from './services/api';
 import { seedFraudCases, seedComplianceMetrics } from './data/mockTickets';
 import { CheckCircle2, ShieldAlert, RefreshCw, Sparkles, WifiOff, AlertTriangle } from 'lucide-react';
+
+// Helper to identify processed/decided cases
+const isCaseProcessed = (c: FraudCase) =>
+  c.status === 'da_tha_loi' || c.status === 'da_xu_phat' || c.status === 'da_canh_cao';
 
 export default function App() {
   // Navigation & Layout
@@ -101,7 +106,10 @@ export default function App() {
 
       if (casesResult.status === 'fulfilled') {
         setCases(casesResult.value);
-        if (casesResult.value.length > 0) {
+        const pending = casesResult.value.filter((c: FraudCase) => !isCaseProcessed(c));
+        if (pending.length > 0) {
+          setSelectedCaseId(pending[0].id);
+        } else if (casesResult.value.length > 0) {
           setSelectedCaseId(casesResult.value[0].id);
         }
         hasSuccess = true;
@@ -144,9 +152,10 @@ export default function App() {
   const handleLoadDemoData = () => {
     setCases(seedFraudCases);
     setMetrics(seedComplianceMetrics);
-    setSelectedCaseId(seedFraudCases[0].id);
+    const pending = seedFraudCases.filter((c) => !isCaseProcessed(c));
+    setSelectedCaseId(pending.length > 0 ? pending[0].id : null);
     setIsDemoMode(true);
-    showToast('Đã nạp 6 hồ sơ gian lận & biên bản giải trình mẫu để thẩm định!');
+    showToast('Đã nạp 7 hồ sơ gian lận & biên bản giải trình mẫu để thẩm định!');
   };
 
   // Clear demo data
@@ -158,9 +167,13 @@ export default function App() {
     showToast('Đã dọn sạch dữ liệu về trạng thái ban đầu.');
   };
 
-  // Filtered Cases logic
-  const filteredCases = cases.filter((c) => {
-    if (searchQuery.trim()) {
+  // Partition cases into Pending vs History
+  const pendingCases = cases.filter((c) => !isCaseProcessed(c));
+  const historyCases = cases.filter((c) => isCaseProcessed(c));
+
+  // Filtered pending cases for the main desk
+  const filteredCases = pendingCases.filter((c) => {
+    if (searchQuery.trim() && currentTab === 'cases') {
       const q = searchQuery.toLowerCase();
       const matchId = c.id.toLowerCase().includes(q);
       const matchPlate = c.driver.plate.toLowerCase().includes(q);
@@ -185,12 +198,22 @@ export default function App() {
     return true;
   });
 
-  // Selected case
-  const selectedCase = cases.find((c) => c.id === selectedCaseId) || (cases.length > 0 ? cases[0] : null);
+  // Selected case for the main desk (only from pending cases)
+  const selectedCase = pendingCases.find((c) => c.id === selectedCaseId) || (pendingCases.length > 0 ? pendingCases[0] : null);
 
   // Update case decision
   const handleUpdateCase = async (updatedCase: FraudCase) => {
     setCases((prev) => prev.map((c) => (c.id === updatedCase.id ? updatedCase : c)));
+
+    // If the case becomes processed, automatically pick the next pending case for the main desk
+    if (isCaseProcessed(updatedCase)) {
+      const remainingPending = pendingCases.filter((c) => c.id !== updatedCase.id);
+      if (remainingPending.length > 0) {
+        setSelectedCaseId(remainingPending[0].id);
+      } else {
+        setSelectedCaseId(null);
+      }
+    }
 
     // Update local metrics
     setMetrics((prev) => {
@@ -206,6 +229,9 @@ export default function App() {
         pendingDelta = -1;
         penalizedDelta = 1;
         finesDelta = updatedCase.decision?.fineAmount || 0;
+      } else if (updatedCase.status === 'da_canh_cao') {
+        pendingDelta = -1;
+        penalizedDelta = 1;
       }
 
       return {
@@ -289,8 +315,9 @@ export default function App() {
         </div>
       )}
 
-      {/* Top Header */}
+      {/* Top Header - Cross-tab agile search */}
       <Header
+        currentTab={currentTab}
         operatorProfile={operatorProfile}
         onUpdateOperatorStatus={(status) => {
           setOperatorProfile((prev) => ({ ...prev, status }));
@@ -303,11 +330,6 @@ export default function App() {
         onFraudTypeChange={setSelectedFraudType}
         selectedSeverity={selectedSeverity}
         onSeverityChange={setSelectedSeverity}
-        onSearchFocus={() => {
-          if (currentTab !== 'cases') {
-            setCurrentTab('cases');
-          }
-        }}
       />
 
       {/* Main Layout: Sidebar + Desk Workspace */}
@@ -317,7 +339,8 @@ export default function App() {
           currentTab={currentTab}
           onTabChange={setCurrentTab}
           caseCount={cases.length}
-          pendingCount={metrics.pendingReview}
+          pendingCount={pendingCases.length}
+          historyCount={historyCases.length}
           metrics={metrics}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
@@ -325,9 +348,10 @@ export default function App() {
 
         {/* Center Content Workspace */}
         <main className="flex-1 flex flex-col overflow-hidden p-3.5 bg-[#f8f9ff]">
+          {/* Tab 1: Pending Cases Queue & Investigation Desk */}
           {currentTab === 'cases' && (
             <div className="flex-1 flex flex-col lg:flex-row gap-3 overflow-hidden min-h-0">
-              {/* Left: Queue of Fraud Cases with Status Tabs */}
+              {/* Left: Queue of Pending Fraud Cases with Status Tabs */}
               <TicketQueue
                 tickets={filteredCases}
                 selectedTicketId={selectedCase?.id || ''}
@@ -335,7 +359,7 @@ export default function App() {
                 isLoading={isLoading}
                 currentStatusTab={currentStatusTab}
                 onStatusTabChange={setCurrentStatusTab}
-                pendingCount={metrics.pendingReview}
+                pendingCount={pendingCases.length}
                 selectedFraudType={selectedFraudType}
                 onFraudTypeChange={setSelectedFraudType}
                 selectedSeverity={selectedSeverity}
@@ -351,49 +375,68 @@ export default function App() {
                 }}
               />
 
-                {/* Right: Adjudication Workspace */}
-                {selectedCase ? (
-                  <TicketDetail
-                    ticket={selectedCase}
-                    onUpdateTicket={handleUpdateCase}
-                    onCallDriver={(name, phone) => setCallModal({ isOpen: true, name, phone })}
-                    onCloseTicket={handleCloseCase}
-                  />
-                ) : (
-                  <div className="flex-1 bg-white border border-slate-200/90 rounded-xl flex flex-col items-center justify-center p-8 text-center shadow-2xs">
-                    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
-                      <ShieldAlert className="w-7 h-7 text-[#008284]" />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-800">Chưa có hồ sơ nào được chọn</h3>
-                    <p className="text-xs text-slate-400 mt-1 max-w-sm">
-                      {cases.length === 0
-                        ? 'Chưa có hồ sơ nghi vấn gian lận nào trong hàng đợi. Các bất thường từ hệ thống Telematics hoặc cuốc xe ảo sẽ tự động xuất hiện tại đây.'
-                        : 'Vui lòng bấm chọn một hồ sơ trong hàng đợi bên trái để kiểm tra giải trình tài xế, đối chiếu dữ liệu viễn thông xe và đưa ra phán quyết.'}
-                    </p>
-                    {cases.length === 0 && !isDemoMode && (
-                      <button
-                        onClick={handleLoadDemoData}
-                        className="mt-4 px-3.5 py-1.5 btn-gsm-primary rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        Nạp hồ sơ mẫu thẩm định
-                      </button>
-                    )}
+              {/* Right: Adjudication Workspace */}
+              {selectedCase ? (
+                <TicketDetail
+                  ticket={selectedCase}
+                  onUpdateTicket={handleUpdateCase}
+                  onCallDriver={(name, phone) => setCallModal({ isOpen: true, name, phone })}
+                  onCloseTicket={handleCloseCase}
+                />
+              ) : (
+                <div className="flex-1 bg-white border border-slate-200/90 rounded-xl flex flex-col items-center justify-center p-8 text-center shadow-2xs">
+                  <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                    <ShieldAlert className="w-7 h-7 text-[#008284]" />
                   </div>
-                )}
-              </div>
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {pendingCases.length === 0 ? 'Tất cả hồ sơ đã được xử lý!' : 'Chưa có hồ sơ nào được chọn'}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                    {pendingCases.length === 0
+                      ? 'Hiện không còn hồ sơ nào đang chờ thẩm định. Các hồ sơ đã giải quyết đã được lưu trữ an toàn trong mục "Lịch Sử Phán Quyết & Xử Lý".'
+                      : 'Vui lòng chọn một hồ sơ trong hàng đợi chờ thẩm định bên trái để kiểm tra giải trình và đối chiếu dữ liệu viễn thông.'}
+                  </p>
+                  {pendingCases.length === 0 && (
+                    <button
+                      onClick={() => setCurrentTab('case_history')}
+                      className="mt-4 px-3.5 py-1.5 btn-gsm-primary rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      Xem lịch sử phán quyết
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Tab 2: Driver Compliance & Trust Directory by CCCD */}
-          {currentTab === 'driver_compliance' && (
-            <DriverDirectoryView
+          {/* Tab 2: Case History & Adjudication Archive */}
+          {currentTab === 'case_history' && (
+            <CaseHistoryView
+              cases={historyCases}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedFraudType={selectedFraudType}
+              selectedSeverity={selectedSeverity}
               onCallDriver={(name, phone) => setCallModal({ isOpen: true, name, phone })}
             />
           )}
 
-          {/* Tab 3: Fraud Analytics & SLA Report */}
+          {/* Tab 3: Driver Compliance & Trust Directory by CCCD */}
+          {currentTab === 'driver_compliance' && (
+            <DriverDirectoryView
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onCallDriver={(name, phone) => setCallModal({ isOpen: true, name, phone })}
+            />
+          )}
+
+          {/* Tab 4: Fraud Analytics & SLA Report */}
           {currentTab === 'fraud_analytics' && (
-            <SLAReportView metrics={metrics} tickets={cases} />
+            <SLAReportView
+              metrics={metrics}
+              tickets={cases}
+              searchQuery={searchQuery}
+            />
           )}
         </main>
       </div>

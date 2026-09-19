@@ -23,11 +23,13 @@ import { ComplianceMetrics, FraudCase } from '../../types';
 interface SLAReportViewProps {
   metrics: ComplianceMetrics;
   tickets?: FraudCase[];
+  searchQuery?: string;
 }
 
 export const SLAReportView: React.FC<SLAReportViewProps> = ({
   metrics,
   tickets = [],
+  searchQuery,
 }) => {
   const fraudTypeStats = [
     { type: 'Cuốc ảo / Chạy khống (Bonus hunting)', key: 'cuoc_ao', count: tickets.filter((t) => t.fraudType === 'cuoc_ao').length || 2, color: 'bg-rose-500' },

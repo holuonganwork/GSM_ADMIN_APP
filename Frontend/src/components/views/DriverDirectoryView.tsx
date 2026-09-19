@@ -14,11 +14,15 @@ interface DriverDirectoryViewProps {
   onCallDriver: (name: string, phone: string) => void;
   onViewCase?: (driverCccd: string) => void;
   initialDrivers?: DriverComplianceInfo[];
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
 export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
   onCallDriver,
   initialDrivers,
+  searchQuery = '',
+  onSearchChange,
 }) => {
   const [search, setSearch] = useState('');
   const [drivers, setDrivers] = useState<DriverComplianceInfo[]>(initialDrivers || [
@@ -103,14 +107,20 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
     }
   }, [initialDrivers]);
 
-  const filtered = drivers.filter(
-    (d) =>
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      d.cccd.includes(search) ||
-      d.phone.includes(search) ||
-      d.plate.toLowerCase().includes(search.toLowerCase()) ||
-      d.id.toLowerCase().includes(search.toLowerCase())
-  );
+  const activeQuery = searchQuery || search;
+
+  const filtered = drivers.filter((d) => {
+    if (!activeQuery.trim()) return true;
+    const q = activeQuery.toLowerCase().trim();
+    return (
+      d.name.toLowerCase().includes(q) ||
+      d.cccd.toLowerCase().includes(q) ||
+      d.phone.toLowerCase().includes(q) ||
+      d.plate.toLowerCase().includes(q) ||
+      d.id.toLowerCase().includes(q) ||
+      d.vehicleModel.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col p-4">
@@ -131,8 +141,11 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={activeQuery}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              onSearchChange?.(e.target.value);
+            }}
             placeholder="Tìm theo CCCD, tên, SĐT, biển số..."
             className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#20B9BE]"
           />
