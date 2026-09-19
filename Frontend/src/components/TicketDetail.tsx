@@ -99,95 +99,81 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
   return (
     <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col h-full">
-      {/* Top Bar: Case ID, Type, Severity & Action Status */}
-      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-base font-black text-slate-900 tracking-tight font-mono">
+      {/* Top Bar: Case ID, Combined Fraud & Severity, Status */}
+      <div className="px-4 py-2 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3 min-h-[42px]">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="text-sm font-black text-slate-900 tracking-tight font-mono">
             HỒ SƠ #{ticket.id}
           </span>
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1.5 shadow-2xs">
-            <ShieldAlert className="w-4 h-4 text-rose-600" />
-            {ticket.fraudTypeLabel}
-          </span>
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-            ticket.severity === 'nghiem_trong' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-            ticket.severity === 'trung_binh' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-            'bg-blue-50 text-blue-700 border border-blue-200'
-          }`}>
-            Mức độ: {ticket.severityLabel}
-          </span>
-          <span className="text-slate-300">•</span>
-          <p className="text-xs text-slate-500 font-medium">
-            Khởi tạo: {ticket.createdAt}
-            {ticket.explanation && (
-              <> • Đã nộp giải trình: <strong className="text-slate-700 font-mono">{ticket.explanation.submittedAt}</strong></>
-            )}
-          </p>
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200/80">
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <span>{ticket.fraudTypeLabel}</span>
+            <span className="text-rose-300">•</span>
+            <span className={`font-bold ${
+              ticket.severity === 'nghiem_trong' ? 'text-rose-700' :
+              ticket.severity === 'trung_binh' ? 'text-amber-700' : 'text-blue-700'
+            }`}>
+              {ticket.severityLabel}
+            </span>
+          </div>
         </div>
 
         {/* Current status badge */}
-        <div className="flex items-center gap-2">
-          <span className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border shadow-2xs ${
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border shadow-2xs ${
             ticket.status === 'da_tha_loi' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
             ticket.status === 'da_xu_phat' ? 'bg-rose-50 text-rose-800 border-rose-300' :
             ticket.status === 'da_nop_cho_duyet' ? 'bg-amber-50 text-amber-800 border-amber-300' :
             'bg-slate-100 text-slate-700 border-slate-300'
           }`}>
-            {ticket.statusLabel}
+            {ticket.status === 'da_nop_cho_duyet' ? 'Chờ duyệt phán quyết' : ticket.statusLabel}
           </span>
         </div>
       </div>
 
-      {/* Driver Identity Card - Compact & Clean */}
-      <div className="px-4 py-2.5 bg-white border-b border-slate-100">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-xs">
-              {ticket.driver.name.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-900">{ticket.driver.name}</h3>
-                <span className="text-xs text-slate-400 font-mono font-semibold">({ticket.driver.id})</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-0.5">
-                {/* Số CCCD nổi bật */}
-                <span className="flex items-center gap-1.5 font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                  <IdCard className="w-3.5 h-3.5 text-[#20B9BE]" />
-                  CCCD: {ticket.driver.cccd}
-                </span>
-                <span className="font-mono text-slate-700 font-medium">{ticket.driver.phone}</span>
-                <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1.5 text-slate-800 font-medium">
-                  <Car className="w-3.5 h-3.5 text-slate-400" />
-                  {ticket.driver.vehicleModel} - <strong className="font-mono">{ticket.driver.plate}</strong>
-                </span>
-              </div>
-            </div>
+      {/* Driver Identity Card - Compact 1-Row Streamlined */}
+      <div className="px-4 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+            {ticket.driver.name.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold text-slate-900">{ticket.driver.name}</span>
+            <span className="text-slate-400 font-mono font-medium">({ticket.driver.id})</span>
+          </div>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="flex items-center gap-1 font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+            <IdCard className="w-3.5 h-3.5 text-[#20B9BE]" />
+            CCCD: {ticket.driver.cccd}
+          </span>
+          <span className="font-mono text-slate-600 font-medium">{ticket.driver.phone}</span>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="flex items-center gap-1 text-slate-700 font-medium">
+            <Car className="w-3.5 h-3.5 text-slate-400" />
+            {ticket.driver.vehicleModel} - <strong className="font-mono text-slate-900">{ticket.driver.plate}</strong>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200">
+            <span className="text-slate-500 font-medium">Tín nhiệm:</span>
+            <span className={`font-black ${
+              ticket.driver.trustScore < 50 ? 'text-rose-600' : ticket.driver.trustScore < 75 ? 'text-amber-600' : 'text-emerald-600'
+            }`}>
+              {ticket.driver.trustScore}/100
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Trust score indicator */}
-            <div className="text-right">
-              <div className="text-xs text-slate-500 font-medium">Tín Nhiệm</div>
-              <div className="text-sm font-black">
-                <span className={ticket.driver.trustScore < 50 ? 'text-rose-600' : ticket.driver.trustScore < 75 ? 'text-amber-600' : 'text-emerald-600'}>
-                  {ticket.driver.trustScore}
-                </span>
-                <span className="text-slate-400 text-xs">/100</span>
-              </div>
-            </div>
-
-            <button
-              id="btn-call-driver"
-              data-testid="btn-call-driver"
-              onClick={() => onCallDriver(ticket.driver.name, ticket.driver.phone)}
-              className="px-3.5 py-1.5 btn-gsm-subtle rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Phone className="w-3.5 h-3.5 text-[#008284]" />
-              Gọi thoại đối soát
-            </button>
-          </div>
+          <button
+            id="btn-call-driver"
+            data-testid="btn-call-driver"
+            onClick={() => onCallDriver(ticket.driver.name, ticket.driver.phone)}
+            className="px-2.5 py-1 btn-gsm-subtle rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Gọi thoại đối soát tài xế"
+          >
+            <Phone className="w-3.5 h-3.5 text-[#008284]" />
+            <span>Gọi đối soát</span>
+          </button>
         </div>
       </div>
 
