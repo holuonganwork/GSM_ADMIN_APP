@@ -108,6 +108,7 @@ export const TicketQueue: React.FC<TicketQueueProps> = ({
               <div
                 key={caseItem.id}
                 id={`case-card-${caseItem.id}`}
+                data-testid={`case-card-${caseItem.id}`}
                 onClick={() => onSelectTicket(caseItem)}
                 className={`p-3.5 rounded-xl border transition-all cursor-pointer relative ${
                   isSelected

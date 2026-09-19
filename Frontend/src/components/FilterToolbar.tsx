@@ -64,7 +64,6 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
       badge: pendingCount > 0 ? pendingCount : undefined,
       badgeColor: 'bg-amber-500 text-white font-bold'
     },
-    { id: 'cho_tai_xe_giai_trinh' as CaseStatus, label: 'Chờ tài xế giải trình' },
     { id: 'da_tha_loi' as CaseStatus, label: 'Đã tha lỗi / Minh oan' },
     { id: 'da_xu_phat' as CaseStatus, label: 'Đã xử phạt vi phạm' },
   ];
@@ -79,6 +78,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               id="filter-case-search"
+              data-testid="filter-case-search"
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
@@ -91,6 +91,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <div className="relative">
             <select
               id="filter-fraud-type-select"
+              data-testid="filter-fraud-type-select"
               value={selectedFraudType}
               onChange={(e) => onFraudTypeChange(e.target.value)}
               className="appearance-none pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
@@ -110,6 +111,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <div className="relative">
             <select
               id="filter-severity-select"
+              data-testid="filter-severity-select"
               value={selectedSeverity}
               onChange={(e) => onSeverityChange(e.target.value)}
               className="appearance-none pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
@@ -129,6 +131,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           {onExportReport && (
             <button
               id="btn-export-report"
+              data-testid="btn-export-report"
               onClick={onExportReport}
               className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-2xs active:scale-98 cursor-pointer"
             >
@@ -140,6 +143,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           {/* Manual Refresh button */}
           <button
             id="btn-manual-refresh"
+            data-testid="btn-manual-refresh"
             onClick={handleManualRefresh}
             disabled={isRefreshing}
             className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 hover:text-slate-900 transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-60"
@@ -157,6 +161,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           return (
             <button
               key={tab.id}
+              id={`filter-tab-${tab.id}`}
+              data-testid={`filter-tab-${tab.id}`}
               onClick={() => onStatusTabChange(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${isActive
                   ? 'btn-gsm-primary'

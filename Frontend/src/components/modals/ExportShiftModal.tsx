@@ -98,12 +98,16 @@ export const ExportShiftModal: React.FC<ExportShiftModalProps> = ({
 
         <div className="flex gap-2.5 justify-end pt-2 border-t border-slate-100">
           <button
+            id="btn-close-export-modal"
+            data-testid="btn-close-export-modal"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
           >
             Đóng
           </button>
           <button
+            id="btn-download-shift-csv"
+            data-testid="btn-download-shift-csv"
             onClick={handleDownloadCSV}
             className="flex items-center gap-1.5 px-4 py-2 btn-gsm-primary rounded-lg text-xs font-bold cursor-pointer"
           >

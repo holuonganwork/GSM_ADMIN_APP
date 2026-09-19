@@ -31,8 +31,27 @@ import { seedFraudCases, seedComplianceMetrics } from './data/mockTickets';
 import { CheckCircle2, ShieldAlert, RefreshCw, Sparkles, WifiOff, AlertTriangle } from 'lucide-react';
 
 export default function App() {
-  // Navigation
+  // Navigation & Layout
   const [currentTab, setCurrentTab] = useState<NavTab>('cases');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gsm_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('gsm_sidebar_collapsed', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Main Fraud Investigation States
   const [cases, setCases] = useState<FraudCase[]>([]);
@@ -290,6 +309,8 @@ export default function App() {
           caseCount={cases.length}
           pendingCount={metrics.pendingReview}
           metrics={metrics}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
         />
 
         {/* Center Content Workspace */}

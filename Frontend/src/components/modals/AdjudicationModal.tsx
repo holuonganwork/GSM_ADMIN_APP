@@ -134,7 +134,12 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer">
+          <button
+            id="btn-modal-close"
+            data-testid="btn-modal-close"
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -149,6 +154,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button
                 type="button"
+                id="btn-decision-tha-loi"
+                data-testid="btn-decision-tha-loi"
                 onClick={() => handleTypeChange('tha_loi')}
                 className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   decisionType === 'tha_loi'
@@ -165,6 +172,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
 
               <button
                 type="button"
+                id="btn-decision-canh-cao"
+                data-testid="btn-decision-canh-cao"
                 onClick={() => handleTypeChange('canh_cao')}
                 className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   decisionType === 'canh_cao'
@@ -181,6 +190,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
 
               <button
                 type="button"
+                id="btn-decision-yeu-cau-bo-sung"
+                data-testid="btn-decision-yeu-cau-bo-sung"
                 onClick={() => handleTypeChange('yeu_cau_bo_sung')}
                 className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   decisionType === 'yeu_cau_bo_sung'
@@ -197,6 +208,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
 
               <button
                 type="button"
+                id="btn-decision-xu-phat-tien"
+                data-testid="btn-decision-xu-phat-tien"
                 onClick={() => handleTypeChange('xu_phat_tien')}
                 className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   decisionType === 'xu_phat_tien'
@@ -213,6 +226,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
 
               <button
                 type="button"
+                id="btn-decision-tam-khoa"
+                data-testid="btn-decision-tam-khoa"
                 onClick={() => handleTypeChange('tam_khoa')}
                 className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   decisionType === 'tam_khoa'
@@ -229,6 +244,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
 
               <button
                 type="button"
+                id="btn-decision-khoa-vinh-vien"
+                data-testid="btn-decision-khoa-vinh-vien"
                 onClick={() => handleTypeChange('khoa_vinh_vien')}
                 className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                   decisionType === 'khoa_vinh_vien'
@@ -258,6 +275,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
                   <label className="block text-slate-700 font-semibold mb-1">Số tiền phạt / Truy thu (VNĐ):</label>
                   <input
                     type="number"
+                    id="input-fine-amount"
+                    data-testid="input-fine-amount"
                     step="50000"
                     value={fineAmount}
                     onChange={(e) => setFineAmount(Number(e.target.value))}
@@ -272,6 +291,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
                   <div>
                     <label className="block text-slate-700 font-semibold mb-1">Thời hạn tạm khóa tài khoản:</label>
                     <select
+                      id="select-suspension-days"
+                      data-testid="select-suspension-days"
                       value={suspensionDays}
                       onChange={(e) => setSuspensionDays(Number(e.target.value))}
                       className="w-full p-2 bg-white border border-rose-300 rounded-lg text-xs font-semibold text-slate-800"
@@ -293,6 +314,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
               Căn Cứ Pháp Lý & Điều Khoản Quy Chế GSM:
             </label>
             <textarea
+              id="textarea-decision-reason"
+              data-testid="textarea-decision-reason"
               rows={2}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -308,6 +331,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
               <span className="text-[10px] text-emerald-600 font-normal">Tự động đẩy qua push notification</span>
             </label>
             <textarea
+              id="textarea-decision-message"
+              data-testid="textarea-decision-message"
               rows={3}
               value={messageToDriver}
               onChange={(e) => setMessageToDriver(e.target.value)}
@@ -320,6 +345,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
           <div className="pt-3.5 border-t border-slate-200 flex items-center justify-end gap-3">
             <button
               type="button"
+              id="btn-modal-cancel"
+              data-testid="btn-modal-cancel"
               onClick={onClose}
               className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm cursor-pointer transition-colors"
             >
@@ -327,6 +354,8 @@ export const AdjudicationModal: React.FC<AdjudicationModalProps> = ({
             </button>
             <button
               type="submit"
+              id="btn-modal-submit"
+              data-testid="btn-modal-submit"
               className={`px-6 py-2.5 font-bold rounded-xl text-sm text-white flex items-center gap-2 shadow-xs cursor-pointer transition-colors active:scale-[0.98] ${
                 decisionType === 'tha_loi'
                   ? 'btn-gsm-success'
