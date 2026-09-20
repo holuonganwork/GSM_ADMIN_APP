@@ -1,14 +1,71 @@
-node_modules/
-build/
-dist/
-coverage/
+# ==========================================
+# Operating System & General
+# ==========================================
 .DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
 *.log
-.env*
-!.env.example
+logs/
 
-# Frontend specific
+# ==========================================
+# IDEs & Editors
+# ==========================================
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.classpath
+.project
+.settings/
+
+# ==========================================
+# Frontend (Node / Vite / React)
+# ==========================================
+node_modules/
 Frontend/node_modules/
+dist/
 Frontend/dist/
-Frontend/.env*
+dist-ssr/
+Frontend/dist-ssr/
+coverage/
+Frontend/coverage/
+
+# Environment files (Keep example templates)
+.env
+.env.*
+!.env.example
+Frontend/.env
+Frontend/.env.*
 !Frontend/.env.example
+
+# ==========================================
+# Backend (Java / Spring Boot / Gradle)
+# ==========================================
+.gradle/
+Backend/.gradle/
+build/
+Backend/build/
+bin/
+out/
+target/
+
+# Keep Gradle Wrapper jar
+!gradle/wrapper/gradle-wrapper.jar
+!Backend/gradle/wrapper/gradle-wrapper.jar
+
+# JVM compiled output
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Database files
+*.h2.db
+*.db
