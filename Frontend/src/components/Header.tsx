@@ -122,8 +122,6 @@ export const Header: React.FC<HeaderProps> = ({
         return 'Tìm tài xế theo CCCD, tên, SĐT, biển số xe...';
       case 'fraud_analytics':
         return 'Tìm theo loại vi phạm, vụ án, biển số...';
-      case 'data_pipeline':
-        return 'Tìm thông số pipeline, mã batch, partition...';
       case 'cases':
       default:
         return 'Tìm hồ sơ chờ xử lý (mã, CCCD, tên tài xế, biển số)...';

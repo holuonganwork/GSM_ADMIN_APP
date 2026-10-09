@@ -14,7 +14,6 @@ import { TicketDetail } from './components/TicketDetail';
 import { CaseHistoryView } from './components/views/CaseHistoryView';
 import { DriverDirectoryView } from './components/views/DriverDirectoryView';
 import { SLAReportView } from './components/views/SLAReportView';
-import { DataPipelineView } from './components/views/DataPipelineView';
 import { DriverCallModal } from './components/modals/DriverCallModal';
 import { ExportShiftModal } from './components/modals/ExportShiftModal';
 
@@ -401,14 +400,6 @@ export default function App() {
               metrics={metrics}
               tickets={cases}
               searchQuery={searchQuery}
-            />
-          )}
-
-          {/* Tab 5: Big Data Lakehouse Pipeline Visualizer */}
-          {currentTab === 'data_pipeline' && (
-            <DataPipelineView
-              onNavigateToCases={() => setCurrentTab('cases')}
-              onShowToast={showToast}
             />
           )}
         </main>
