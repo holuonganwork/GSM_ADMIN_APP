@@ -30,6 +30,7 @@ public class FraudCaseService {
     private final FraudCaseRepository fraudCaseRepository;
     private final DriverRepository driverRepository;
     private final CaseDecisionRepository caseDecisionRepository;
+    private final ComplianceRabbitMqPublisher complianceRabbitMqPublisher;
 
     @Transactional(readOnly = true)
     public List<FraudCaseResponseDto> getCases(String statusStr, String fraudTypeStr, String severityStr, String search) {
@@ -133,6 +134,17 @@ public class FraudCaseService {
         c.setDecision(decision);
         fraudCaseRepository.save(c);
 
+        // Publish to RabbitMQ to synchronize AI-LLM-Core and Driver App
+        complianceRabbitMqPublisher.publishDecisionFinalized(
+            c.getId(),
+            driver != null ? driver.getId() : "TX-0921",
+            c.getStatus().getCode(),
+            decision.getReason(),
+            decision.getMessageToDriver(),
+            officerName,
+            officerCode
+        );
+
         return EntityMapper.toFraudCaseResponseDto(c);
     }
 
@@ -162,6 +174,16 @@ public class FraudCaseService {
 
         c.setDecision(decision);
         fraudCaseRepository.save(c);
+
+        complianceRabbitMqPublisher.publishDecisionFinalized(
+            c.getId(),
+            c.getDriver() != null ? c.getDriver().getId() : "TX-0921",
+            c.getStatus().getCode(),
+            decision.getReason(),
+            decision.getMessageToDriver(),
+            "Nguyễn Mai Chi",
+            "GSM-INSPECT-88"
+        );
 
         return EntityMapper.toFraudCaseResponseDto(c);
     }

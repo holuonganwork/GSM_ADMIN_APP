@@ -14,6 +14,7 @@ import { TicketDetail } from './components/TicketDetail';
 import { CaseHistoryView } from './components/views/CaseHistoryView';
 import { DriverDirectoryView } from './components/views/DriverDirectoryView';
 import { SLAReportView } from './components/views/SLAReportView';
+import { DataPipelineView } from './components/views/DataPipelineView';
 import { DriverCallModal } from './components/modals/DriverCallModal';
 import { ExportShiftModal } from './components/modals/ExportShiftModal';
 
@@ -27,8 +28,7 @@ import {
   defaultOperatorProfile,
 } from './types';
 import { complianceApi, operatorApi, notificationApi } from './services/api';
-import { seedFraudCases, seedComplianceMetrics } from './data/mockTickets';
-import { CheckCircle2, ShieldAlert, RefreshCw, Sparkles, WifiOff, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, RefreshCw, WifiOff, AlertTriangle } from 'lucide-react';
 
 // Helper to identify processed/decided/supplementary cases that belong to History
 const isCaseProcessed = (c: FraudCase) =>
@@ -70,7 +70,6 @@ export default function App() {
   // System & Connection States
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [backendStatus, setBackendStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -134,7 +133,6 @@ export default function App() {
 
       if (hasSuccess) {
         setBackendStatus('connected');
-        setIsDemoMode(false);
       } else {
         setBackendStatus('disconnected');
       }
@@ -149,25 +147,6 @@ export default function App() {
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
-
-  // Seed demo data helper
-  const handleLoadDemoData = () => {
-    setCases(seedFraudCases);
-    setMetrics(seedComplianceMetrics);
-    const pending = seedFraudCases.filter((c) => c.status === 'da_nop_cho_duyet');
-    setSelectedCaseId(pending.length > 0 ? pending[0].id : null);
-    setIsDemoMode(true);
-    showToast('Đã nạp 7 hồ sơ gian lận & biên bản giải trình mẫu để thẩm định!');
-  };
-
-  // Clear demo data
-  const handleClearData = () => {
-    setCases([]);
-    setMetrics(emptyComplianceMetrics);
-    setSelectedCaseId(null);
-    setIsDemoMode(false);
-    showToast('Đã dọn sạch dữ liệu về trạng thái ban đầu.');
-  };
 
   // Partition cases: Pending contains ONLY 'da_nop_cho_duyet'
   const pendingCases = cases.filter((c) => c.status === 'da_nop_cho_duyet');
@@ -284,35 +263,19 @@ export default function App() {
 
       {/* Backend Offline Banner */}
       {backendStatus === 'disconnected' && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 flex items-center justify-between text-xs text-amber-800 z-40">
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between text-xs text-amber-900 z-40">
           <div className="flex items-center gap-2">
-            <WifiOff className="w-3.5 h-3.5 text-amber-600" />
+            <WifiOff className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Máy chủ Backend (/api):</strong> Chưa kết nối với dịch vụ backend. Bạn có thể nạp bộ dữ liệu mẫu thực tế để trải nghiệm thẩm định hồ sơ gian lận.
+              <strong>Máy chủ Backend (/api):</strong> Chưa kết nối được với dịch vụ Spring Boot Backend (Cổng 8000). Vui lòng đảm bảo backend đang hoạt động và bấm thử kết nối lại.
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {!isDemoMode ? (
-              <button
-                onClick={handleLoadDemoData}
-                className="px-2.5 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded font-medium text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-              >
-                <Sparkles className="w-3 h-3" />
-                Nạp hồ sơ mẫu thẩm định
-              </button>
-            ) : (
-              <button
-                onClick={handleClearData}
-                className="px-2.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-medium text-[11px] cursor-pointer transition-colors"
-              >
-                Xóa dữ liệu mẫu
-              </button>
-            )}
             <button
               onClick={loadInitialData}
-              className="px-2.5 py-0.5 bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 rounded font-medium text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+              className="px-3 py-1 bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 rounded-lg font-medium text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
             >
-              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               Thử kết nối lại
             </button>
           </div>
@@ -438,6 +401,14 @@ export default function App() {
               metrics={metrics}
               tickets={cases}
               searchQuery={searchQuery}
+            />
+          )}
+
+          {/* Tab 5: Big Data Lakehouse Pipeline Visualizer */}
+          {currentTab === 'data_pipeline' && (
+            <DataPipelineView
+              onNavigateToCases={() => setCurrentTab('cases')}
+              onShowToast={showToast}
             />
           )}
         </main>

@@ -174,3 +174,62 @@ export const defaultOperatorProfile: OperatorProfile = {
 export type Ticket = FraudCase;
 export type ShiftMetrics = ComplianceMetrics;
 export const emptyShiftMetrics = emptyComplianceMetrics;
+
+// ----------------- Data Pipeline Types & Interfaces -----------------
+export type PipelineStageId = 'overview' | 'bronze' | 'silver' | 'gold' | 'serving';
+
+export type PipelineHealthStatus = 'healthy' | 'running' | 'warning' | 'idle';
+
+export interface PipelineMetric {
+  label: string;
+  value: string;
+  changeText?: string;
+  isPositive?: boolean;
+  subtext?: string;
+}
+
+export interface PipelineQualityCheck {
+  id: string;
+  title: string;
+  rule: string;
+  status: 'passed' | 'warning' | 'failed';
+  sampleValue?: string;
+}
+
+export interface PipelineBatchItem {
+  batchId: string;
+  vehiclesCount: number;
+  recordsCount: string;
+  fileSizeBytes: string;
+  sha256: string;
+  status: 'completed' | 'processing' | 'quarantined';
+  completedAt: string;
+}
+
+export interface PipelineStageInfo {
+  id: PipelineStageId;
+  name: string;
+  tierLabel: string;
+  shortDesc: string;
+  status: PipelineHealthStatus;
+  statusLabel: string;
+  primaryThroughput: string;
+  duration: string;
+  metrics: PipelineMetric[];
+  checks: PipelineQualityCheck[];
+  batches?: PipelineBatchItem[];
+  highlights: string[];
+}
+
+export interface DataPipelineSummary {
+  systemName: string;
+  scope: string;
+  lastUpdated: string;
+  activeBatchTime: string;
+  overallHealth: PipelineHealthStatus;
+  totalVehicles: number;
+  totalTripsToday: number;
+  quarantineVehiclesCount: number;
+  slaProcessingTime: string;
+  stages: PipelineStageInfo[];
+}

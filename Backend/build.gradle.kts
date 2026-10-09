@@ -28,8 +28,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    // Database (H2 for zero-config local dev & testing)
+    // Database
     runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.postgresql:postgresql")
+
+    // RabbitMQ Messaging
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
 
     // OpenAPI 3 / Swagger UI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")

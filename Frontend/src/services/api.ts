@@ -14,13 +14,35 @@ import {
   OperatorProfile,
 } from '../types';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
-interface RequestOptions extends RequestInit {
+export interface RequestOptions extends RequestInit {
   timeoutMs?: number;
 }
 
-async function fetchApi<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+/**
+ * Sanitize input strings to prevent XSS attacks and clean junk/untrusted data.
+ */
+export function sanitizeInput(input: unknown): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags & content
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframe tags & content
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')   // Remove style tags & content
+    .replace(/<[^>]+>/g, '')                                            // Remove HTML tags
+    .replace(/javascript:/gi, '')                                       // Remove javascript: URI
+    .trim();
+}
+
+/**
+ * Validates 12-digit Vietnamese CCCD format
+ */
+export function isValidCccd(cccd: string): boolean {
+  if (!cccd) return false;
+  return /^\d{12}$/.test(cccd.trim());
+}
+
+export async function fetchApi<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { timeoutMs = 8000, ...fetchOptions } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -72,7 +94,7 @@ export const complianceApi = {
     if (params?.status && params.status !== 'all') query.set('status', params.status);
     if (params?.fraudType && params.fraudType !== 'all') query.set('fraudType', params.fraudType);
     if (params?.severity && params.severity !== 'all') query.set('severity', params.severity);
-    if (params?.search) query.set('search', params.search);
+    if (params?.search) query.set('search', params.search.trim());
 
     const qs = query.toString();
     return fetchApi<FraudCase[]>(`/compliance/cases${qs ? `?${qs}` : ''}`);
@@ -89,16 +111,23 @@ export const complianceApi = {
       officerCode?: string;
     }
   ): Promise<FraudCase> {
+    const sanitizedPayload = {
+      ...decision,
+      reason: sanitizeInput(decision.reason),
+      messageToDriver: sanitizeInput(decision.messageToDriver),
+      officerName: decision.officerName ? sanitizeInput(decision.officerName) : undefined,
+      officerCode: decision.officerCode ? sanitizeInput(decision.officerCode) : undefined,
+    };
     return fetchApi<FraudCase>(`/compliance/cases/${encodeURIComponent(id)}/decision`, {
       method: 'POST',
-      body: JSON.stringify(decision),
+      body: JSON.stringify(sanitizedPayload),
     });
   },
 
   async requestMoreEvidence(id: string, note: string): Promise<FraudCase> {
     return fetchApi<FraudCase>(`/compliance/cases/${encodeURIComponent(id)}/request-evidence`, {
       method: 'POST',
-      body: JSON.stringify({ note }),
+      body: JSON.stringify({ note: sanitizeInput(note) }),
     });
   },
 
@@ -107,11 +136,12 @@ export const complianceApi = {
   },
 
   async getDriverByCccd(cccd: string): Promise<DriverComplianceInfo> {
-    return fetchApi<DriverComplianceInfo>(`/compliance/drivers/${encodeURIComponent(cccd)}`);
+    const cleanCccd = cccd.trim();
+    return fetchApi<DriverComplianceInfo>(`/compliance/drivers/${encodeURIComponent(cleanCccd)}`);
   },
 
   async getAllDrivers(search?: string): Promise<DriverComplianceInfo[]> {
-    const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+    const qs = search ? `?search=${encodeURIComponent(search.trim())}` : '';
     return fetchApi<DriverComplianceInfo[]>(`/compliance/drivers${qs}`);
   },
 };
@@ -136,7 +166,7 @@ export const notificationApi = {
   },
 
   async markAsRead(id: string | number): Promise<void> {
-    return fetchApi<void>(`/notifications/${id}/read`, {
+    return fetchApi<void>(`/notifications/${encodeURIComponent(String(id))}/read`, {
       method: 'POST',
     });
   },

@@ -14,11 +14,12 @@ import {
   Coins,
   PanelLeftClose,
   PanelLeftOpen,
-  History
+  History,
+  Workflow
 } from 'lucide-react';
 import { ComplianceMetrics } from '../types';
 
-export type NavTab = 'cases' | 'case_history' | 'driver_compliance' | 'fraud_analytics';
+export type NavTab = 'cases' | 'case_history' | 'driver_compliance' | 'fraud_analytics' | 'data_pipeline';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -75,6 +76,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Báo Cáo & Thống Kê Gian Lận',
       shortLabel: 'Báo cáo',
       icon: Scale,
+    },
+    {
+      id: 'data_pipeline' as NavTab,
+      label: 'Pipeline Dữ Liệu Lớn',
+      shortLabel: 'Pipeline',
+      icon: Workflow,
+      badge: '100k',
+      badgeTitle: '100.000 xe taxi điện VinFast đã chốt ca',
+      countOnly: '100k',
+      badgeHighlight: false,
     },
   ];
 
