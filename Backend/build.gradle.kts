@@ -50,6 +50,15 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+val cleanTestDb = tasks.register<Exec>("cleanTestDb") {
+    group = "verification"
+    description = "Clean up test data from PostgreSQL gsm_simulator database manually"
+    workingDir = rootProject.projectDir.parentFile
+    commandLine("cmd", "/c", "clean_test_data.bat")
+    isIgnoreExitValue = true
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+

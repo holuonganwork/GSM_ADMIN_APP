@@ -25,100 +25,56 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
   onSearchChange,
 }) => {
   const [search, setSearch] = useState('');
-  const [drivers, setDrivers] = useState<DriverComplianceInfo[]>(initialDrivers || [
-    {
-      id: 'TX-0921',
-      name: 'Lê Hoàng Long',
-      cccd: '001094012845',
-      phone: '0912.345.678',
-      plate: '29E-521.84',
-      vehicleModel: 'VinFast VF e34',
-      trustScore: 48,
-      priorViolationsCount: 1,
-      completedRides: 1420,
-      rating: 4.88,
-    },
-    {
-      id: 'TX-1482',
-      name: 'Trần Văn Bình',
-      cccd: '024091004512',
-      phone: '0988.765.432',
-      plate: '30K-194.22',
-      vehicleModel: 'VinFast VF 8',
-      trustScore: 35,
-      priorViolationsCount: 2,
-      completedRides: 2840,
-      rating: 4.92,
-    },
-    {
-      id: 'TX-0774',
-      name: 'Nguyễn Quang Minh',
-      cccd: '033095011984',
-      phone: '0977.123.888',
-      plate: '29E-882.19',
-      vehicleModel: 'VinFast VF 5 Plus',
-      trustScore: 82,
-      priorViolationsCount: 0,
-      completedRides: 910,
-      rating: 4.95,
-    },
-    {
-      id: 'TX-3102',
-      name: 'Phạm Thị Thu',
-      cccd: '001198007621',
-      phone: '0933.456.789',
-      plate: '29AA-492.01',
-      vehicleModel: 'VinFast Feliz S',
-      trustScore: 94,
-      priorViolationsCount: 0,
-      completedRides: 3100,
-      rating: 4.98,
-    },
-    {
-      id: 'TX-2019',
-      name: 'Hoàng Quốc Việt',
-      cccd: '017089002341',
-      phone: '0904.567.890',
-      plate: '30K-032.55',
-      vehicleModel: 'VinFast VF 8',
-      trustScore: 40,
-      priorViolationsCount: 1,
-      completedRides: 1820,
-      rating: 4.89,
-    },
-    {
-      id: 'TX-4402',
-      name: 'Đặng Tuấn Kiệt',
-      cccd: '001090001923',
-      phone: '0981.999.888',
-      plate: '30K-441.22',
-      vehicleModel: 'VinFast VF 8',
-      trustScore: 20,
-      priorViolationsCount: 3,
-      completedRides: 890,
-      rating: 4.75,
-    },
-  ]);
+  const [drivers, setDrivers] = useState<DriverComplianceInfo[]>(initialDrivers || []);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (initialDrivers && initialDrivers.length > 0) {
-      setDrivers(initialDrivers);
-    }
-  }, [initialDrivers]);
-
   const activeQuery = searchQuery || search;
+
+  useEffect(() => {
+    if (initialDrivers) {
+      setDrivers(initialDrivers);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      complianceApi
+        .getAllDrivers(activeQuery)
+        .then((data) => {
+          if (isMounted) {
+            setDrivers(data || []);
+          }
+        })
+        .catch((err) => {
+          console.error('Lỗi khi nạp danh bạ tài xế từ API:', err);
+          if (isMounted) {
+            setDrivers([]);
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [initialDrivers, activeQuery]);
 
   const filtered = drivers.filter((d) => {
     if (!activeQuery.trim()) return true;
     const q = activeQuery.toLowerCase().trim();
     return (
-      d.name.toLowerCase().includes(q) ||
-      d.cccd.toLowerCase().includes(q) ||
-      d.phone.toLowerCase().includes(q) ||
-      d.plate.toLowerCase().includes(q) ||
-      d.id.toLowerCase().includes(q) ||
-      d.vehicleModel.toLowerCase().includes(q)
+      (d.name && d.name.toLowerCase().includes(q)) ||
+      (d.cccd && d.cccd.toLowerCase().includes(q)) ||
+      (d.phone && d.phone.toLowerCase().includes(q)) ||
+      (d.plate && d.plate.toLowerCase().includes(q)) ||
+      (d.id && d.id.toLowerCase().includes(q)) ||
+      (d.vehicleModel && d.vehicleModel.toLowerCase().includes(q))
     );
   });
 
@@ -168,11 +124,22 @@ export const DriverDirectoryView: React.FC<DriverDirectoryViewProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="py-16 text-center text-slate-400">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-6 h-6 border-2 border-[#20B9BE] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-medium">Đang tải hồ sơ tài xế từ hệ thống...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-16 text-center text-slate-400">
                   <IdCard className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                  Không tìm thấy hồ sơ tài xế nào phù hợp với CCCD hoặc từ khóa tìm kiếm.
+                  {activeQuery.trim()
+                    ? 'Không tìm thấy hồ sơ tài xế nào phù hợp với CCCD hoặc từ khóa tìm kiếm.'
+                    : 'Chưa có hồ sơ tài xế nào trong hệ thống.'}
                 </td>
               </tr>
             ) : (

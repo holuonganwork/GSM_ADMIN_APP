@@ -156,7 +156,7 @@ export const emptyComplianceMetrics: ComplianceMetrics = {
   penalizedCount: 0,
   totalFinesRecovered: 0,
   avgReviewTimeHours: 0,
-  slaCompliancePercent: 100,
+  slaCompliancePercent: 0,
 };
 
 export const defaultOperatorProfile: OperatorProfile = {

@@ -137,7 +137,7 @@ public class FraudCaseService {
         // Publish to RabbitMQ to synchronize AI-LLM-Core and Driver App
         complianceRabbitMqPublisher.publishDecisionFinalized(
             c.getId(),
-            driver != null ? driver.getId() : "TX-0921",
+            driver != null ? driver.getId() : (c.getDriver() != null ? c.getDriver().getId() : null),
             c.getStatus().getCode(),
             decision.getReason(),
             decision.getMessageToDriver(),
@@ -177,7 +177,7 @@ public class FraudCaseService {
 
         complianceRabbitMqPublisher.publishDecisionFinalized(
             c.getId(),
-            c.getDriver() != null ? c.getDriver().getId() : "TX-0921",
+            c.getDriver() != null ? c.getDriver().getId() : null,
             c.getStatus().getCode(),
             decision.getReason(),
             decision.getMessageToDriver(),

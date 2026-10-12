@@ -25,18 +25,26 @@ public class MetricService {
         long supplementary = fraudCaseRepository.countByStatus(CaseStatus.YEU_CAU_BO_SUNG);
 
         Long fines = caseDecisionRepository.sumTotalFines();
-        long totalFines = (fines != null && fines > 0) ? fines : 18500000L;
+        long totalFines = (fines != null) ? fines : 0L;
+
+        double slaPercent = 0.0;
+        if (total > 0) {
+            long compliantCount = fraudCaseRepository.findAll().stream()
+                .filter(c -> c.getDeadlineHours() == null || c.getDeadlineHours() >= 0)
+                .count();
+            slaPercent = Math.round(((double) compliantCount / total) * 1000.0) / 10.0;
+        }
 
         return ComplianceMetricsDto.builder()
-            .totalCases(total > 0 ? total : 28L)
+            .totalCases(total)
             .pendingReview(pending)
-            .exoneratedCount(exonerated > 0 ? exonerated : 11L)
-            .penalizedCount(penalized > 0 ? penalized : 9L)
-            .warnedCount(warned > 0 ? warned : 2L)
-            .supplementaryCount(supplementary > 0 ? supplementary : 2L)
+            .exoneratedCount(exonerated)
+            .penalizedCount(penalized)
+            .warnedCount(warned)
+            .supplementaryCount(supplementary)
             .totalFinesRecovered(totalFines)
-            .avgReviewTimeHours(3.4)
-            .slaCompliancePercent(96.4)
+            .avgReviewTimeHours(0.0)
+            .slaCompliancePercent(slaPercent)
             .build();
     }
 }

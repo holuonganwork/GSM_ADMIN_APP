@@ -41,35 +41,26 @@ public class ComplianceRabbitMqConsumer {
             String driverId = (String) payload.get("driver_id");
             String recommendation = (String) payload.get("ai_recommendation");
             String driverStatement = (String) payload.get("driver_statement");
-            Double confidence = payload.get("confidence") instanceof Number ? ((Number) payload.get("confidence")).doubleValue() : 0.8;
+            Double confidence = payload.get("confidence") instanceof Number ? ((Number) payload.get("confidence")).doubleValue() : 0.0;
 
             if (caseId == null || caseId.isBlank()) {
                 log.warn("Invalid review requested payload: case_id missing");
                 return;
             }
 
-            // Ensure Driver exists (Compliant with strict 12-digit CCCD rule)
-            String effectiveDriverId = (driverId != null && !driverId.isBlank()) ? driverId : "TX-0921";
-            Driver driver = driverRepository.findById(effectiveDriverId).orElseGet(() -> {
-                // Search by id or create compliant fallback
-                return driverRepository.findAll().stream().findFirst().orElseGet(() -> {
-                    long hash = Math.abs((long) effectiveDriverId.hashCode() + 100000000000L) % 900000000000L + 100000000000L;
-                    String dynamicCccd = String.format("%012d", hash);
-                    Driver newDriver = Driver.builder()
-                        .id(effectiveDriverId)
-                        .name("Tài xế " + effectiveDriverId)
-                        .cccd(dynamicCccd)
-                        .phone("0988.123.456")
-                        .plate("29E-886.92")
-                        .vehicleModel("VinFast VF 8")
-                        .trustScore(80)
-                        .priorViolationsCount(0)
-                        .completedRides(1250)
-                        .rating(4.9)
-                        .build();
-                    return driverRepository.save(newDriver);
-                });
+            if (driverId == null || driverId.isBlank()) {
+                log.warn("Invalid review requested payload: driver_id missing for case {}", caseId);
+                return;
+            }
+
+            Driver driver = driverRepository.findById(driverId).orElseGet(() -> {
+                return driverRepository.findByCccd(driverId).orElse(null);
             });
+
+            if (driver == null) {
+                log.warn("Driver with ID/CCCD '{}' not found in database for case {}", driverId, caseId);
+                return;
+            }
 
             String timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) + " (Hôm nay)";
 

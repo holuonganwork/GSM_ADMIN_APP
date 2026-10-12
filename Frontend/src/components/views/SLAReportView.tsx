@@ -32,17 +32,21 @@ export const SLAReportView: React.FC<SLAReportViewProps> = ({
   searchQuery,
 }) => {
   const fraudTypeStats = [
-    { type: 'Cuốc ảo / Chạy khống (Bonus hunting)', key: 'cuoc_ao', count: tickets.filter((t) => t.fraudType === 'cuoc_ao').length || 2, color: 'bg-rose-500' },
-    { type: 'Giả lập vị trí GPS (Mock Location)', key: 'gps_spoofing', count: tickets.filter((t) => t.fraudType === 'gps_spoofing').length || 2, color: 'bg-purple-600' },
-    { type: 'Trục lợi mã giảm giá Voucher', key: 'gian_lan_voucher', count: tickets.filter((t) => t.fraudType === 'gian_lan_voucher').length || 1, color: 'bg-amber-500' },
-    { type: 'Thu cước sai / Thu tiền ngoài app', key: 'thu_cuoc_sai', count: tickets.filter((t) => t.fraudType === 'thu_cuoc_sai').length || 1, color: 'bg-blue-600' },
-    { type: 'Cố tình ngắt T-Box Telematics', key: 'tat_dinh_vi', count: tickets.filter((t) => t.fraudType === 'tat_dinh_vi').length || 1, color: 'bg-slate-700' },
+    { type: 'Cuốc ảo / Chạy khống (Bonus hunting)', key: 'cuoc_ao', count: tickets.filter((t) => t.fraudType === 'cuoc_ao').length, color: 'bg-rose-500' },
+    { type: 'Giả lập vị trí GPS (Mock Location)', key: 'gps_spoofing', count: tickets.filter((t) => t.fraudType === 'gps_spoofing').length, color: 'bg-purple-600' },
+    { type: 'Trục lợi mã giảm giá Voucher', key: 'gian_lan_voucher', count: tickets.filter((t) => t.fraudType === 'gian_lan_voucher').length, color: 'bg-amber-500' },
+    { type: 'Thu cước sai / Thu tiền ngoài app', key: 'thu_cuoc_sai', count: tickets.filter((t) => t.fraudType === 'thu_cuoc_sai').length, color: 'bg-blue-600' },
+    { type: 'Cố tình ngắt T-Box Telematics', key: 'tat_dinh_vi', count: tickets.filter((t) => t.fraudType === 'tat_dinh_vi').length, color: 'bg-slate-700' },
   ];
 
-  const totalFraudCases = tickets.length > 0 ? tickets.length : metrics.totalCases;
+  const totalFraudCases = tickets.length > 0 ? tickets.length : (metrics.totalCases ?? 0);
   const decidedCases = tickets.filter((t) => t.status === 'da_tha_loi' || t.status === 'da_xu_phat');
-  const exonerated = tickets.filter((t) => t.status === 'da_tha_loi').length || metrics.exoneratedCount;
-  const penalized = tickets.filter((t) => t.status === 'da_xu_phat').length || metrics.penalizedCount;
+  const exonerated = tickets.length > 0
+    ? tickets.filter((t) => t.status === 'da_tha_loi').length
+    : (metrics.exoneratedCount ?? 0);
+  const penalized = tickets.length > 0
+    ? tickets.filter((t) => t.status === 'da_xu_phat').length
+    : (metrics.penalizedCount ?? 0);
 
   return (
     <div className="flex-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden flex flex-col p-4 space-y-4">
